@@ -123,9 +123,10 @@ export const AuthProvider = ({ children }) => {
     api,
     isAuthenticated: !!token && !!user,
     isAdmin: user?.role === 'ADMIN',
-    isShipper: user?.role === 'SHIPPER',
-    isCarrier: user?.role === 'CARRIER_INDIVIDUAL' || user?.role === 'CARRIER_PRO',
-    isCarrierPro: user?.role === 'CARRIER_PRO'
+    isShipper: user?.role === 'SHIPPER' || user?.role === 'SHIPPER_CARRIER',
+    isCarrier: user?.role === 'CARRIER_INDIVIDUAL' || user?.role === 'CARRIER_PRO' || user?.role === 'SHIPPER_CARRIER',
+    isCarrierPro: user?.role === 'CARRIER_PRO',
+    isShipperCarrier: user?.role === 'SHIPPER_CARRIER'
   };
 
   return (
