@@ -151,6 +151,82 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 space-y-8" data-testid="dashboard-page">
+      {/* Alerte de vérification d'identité pour les transporteurs */}
+      {isCarrier && verificationStatus && verificationStatus.status !== 'VERIFIED' && (
+        <Alert className={`rounded-2xl ${
+          verificationStatus.status === 'REJECTED' ? 'border-red-200 bg-red-50' :
+          verificationStatus.status === 'PENDING' && verificationStatus.documents_complete ? 'border-blue-200 bg-blue-50' :
+          'border-orange-200 bg-orange-50'
+        }`}>
+          <Shield className={`w-5 h-5 ${
+            verificationStatus.status === 'REJECTED' ? 'text-red-500' :
+            verificationStatus.status === 'PENDING' && verificationStatus.documents_complete ? 'text-blue-500' :
+            'text-orange-500'
+          }`} />
+          <AlertDescription className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              {verificationStatus.status === 'NOT_STARTED' && (
+                <>
+                  <strong>Vérifiez votre identité</strong>
+                  <p className="text-sm text-muted-foreground">
+                    Pour assurer la confiance des expéditeurs, veuillez vérifier votre identité.
+                  </p>
+                </>
+              )}
+              {verificationStatus.status === 'PENDING' && !verificationStatus.documents_complete && (
+                <>
+                  <strong>Documents manquants</strong>
+                  <p className="text-sm text-muted-foreground">
+                    Veuillez compléter votre dossier de vérification.
+                  </p>
+                </>
+              )}
+              {verificationStatus.status === 'PENDING' && verificationStatus.documents_complete && (
+                <>
+                  <strong>Vérification en cours</strong>
+                  <p className="text-sm text-muted-foreground">
+                    Votre dossier est en cours d'examen par notre équipe.
+                  </p>
+                </>
+              )}
+              {verificationStatus.status === 'REJECTED' && (
+                <>
+                  <strong>Vérification rejetée</strong>
+                  <p className="text-sm text-muted-foreground">
+                    {verificationStatus.rejection_reason || 'Veuillez corriger votre dossier.'}
+                  </p>
+                </>
+              )}
+            </div>
+            {verificationStatus.status !== 'PENDING' || !verificationStatus.documents_complete ? (
+              <Button
+                onClick={() => navigate('/carrier/verification')}
+                className="rounded-full whitespace-nowrap"
+                variant={verificationStatus.status === 'REJECTED' ? 'destructive' : 'default'}
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                {verificationStatus.status === 'NOT_STARTED' ? 'Vérifier mon identité' : 
+                 verificationStatus.status === 'REJECTED' ? 'Corriger mon dossier' : 
+                 'Compléter mon dossier'}
+              </Button>
+            ) : null}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Badge de vérification si vérifié */}
+      {isCarrier && verificationStatus?.status === 'VERIFIED' && (
+        <Alert className="rounded-2xl border-green-200 bg-green-50">
+          <CheckCircle2 className="w-5 h-5 text-green-500" />
+          <AlertDescription>
+            <strong className="text-green-700">Identité vérifiée</strong>
+            <span className="text-green-600 ml-2">
+              Votre profil affiche le badge de confiance aux expéditeurs.
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
@@ -161,6 +237,11 @@ const Dashboard = () => {
             <Badge variant="secondary" className="text-sm">
               {getRoleLabel()}
             </Badge>
+            {isCarrier && verificationStatus?.status === 'VERIFIED' && (
+              <Badge className="bg-green-500 text-xs">
+                <CheckCircle2 className="w-3 h-3 mr-1" /> Vérifié
+              </Badge>
+            )}
             {getRating() && (
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
