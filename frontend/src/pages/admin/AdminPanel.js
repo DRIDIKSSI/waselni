@@ -309,7 +309,8 @@ const AdminPanel = () => {
       <Tabs defaultValue="users" className="space-y-6">
         <TabsList className="flex flex-wrap w-full rounded-xl h-auto gap-1 bg-muted p-1">
           <TabsTrigger value="users" className="text-xs">Utilisateurs</TabsTrigger>
-          <TabsTrigger value="verifications" className="text-xs">Vérifications</TabsTrigger>
+          <TabsTrigger value="identity" className="text-xs">🪪 Identité</TabsTrigger>
+          <TabsTrigger value="verifications" className="text-xs">Vérifications Pro</TabsTrigger>
           <TabsTrigger value="reports" className="text-xs">Signalements</TabsTrigger>
           <TabsTrigger value="requests" className="text-xs">Demandes</TabsTrigger>
           <TabsTrigger value="offers" className="text-xs">Offres</TabsTrigger>
