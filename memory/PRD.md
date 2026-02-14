@@ -69,3 +69,46 @@ Février 2026 - Ajout du rôle combiné Expéditeur+Transporteur avec checkboxes
 - Le rôle SHIPPER_CARRIER hérite des permissions des deux rôles
 - Dashboard affiche toutes les actions disponibles pour ce rôle
 - Tests: 100% de réussite backend et frontend
+
+## Vérification d'Identité des Transporteurs (Février 2026)
+
+### Documents Requis
+1. **Pièce d'identité** (obligatoire)
+   - Passeport
+   - Titre de séjour
+   - Permis de conduire
+
+2. **Justificatif de domicile** (obligatoire)
+   - Facture d'électricité, gaz, eau, internet
+   - Avis d'imposition
+   - **Daté de moins de 3 mois** (validation automatique)
+
+### Workflow de Vérification
+```
+Transporteur → Soumet infos → Upload ID → Upload justificatif → Admin examine → Approuve/Rejette
+```
+
+### Endpoints API
+- `POST /api/carriers/verification/submit` - Soumettre les informations
+- `POST /api/carriers/verification/identity-document` - Upload pièce d'identité
+- `POST /api/carriers/verification/address-proof?document_date=YYYY-MM-DD` - Upload justificatif
+- `GET /api/carriers/verification/status` - Statut de la vérification
+- `GET /api/admin/carrier-verifications` - Liste des vérifications (admin)
+- `PATCH /api/admin/carrier-verifications/{id}/approve` - Approuver (admin)
+- `PATCH /api/admin/carrier-verifications/{id}/reject?reason=...` - Rejeter (admin)
+
+### Statuts de Vérification
+- `NOT_STARTED` - Non commencée
+- `PENDING` - En attente de validation admin
+- `VERIFIED` - Identité vérifiée ✅
+- `REJECTED` - Rejetée (avec motif)
+
+### Fichiers Implémentés
+- `/app/frontend/src/pages/carrier/IdentityVerification.js` - Page de vérification
+- `/app/frontend/src/pages/admin/AdminPanel.js` - Onglet Identité admin
+- `/app/backend/server.py` - Endpoints de vérification
+
+### Tests
+- 100% réussite backend (21/21 tests)
+- 100% réussite frontend
+- 100% réussite panel admin
