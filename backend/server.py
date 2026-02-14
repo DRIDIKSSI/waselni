@@ -510,7 +510,7 @@ async def get_my_verification(user: dict = Depends(get_current_user)):
 # ==================== REQUESTS ROUTES ====================
 @api_router.post("/requests")
 async def create_request(data: RequestCreate, user: dict = Depends(get_current_user)):
-    if user["role"] not in ["SHIPPER", "ADMIN"]:
+    if user["role"] not in ["SHIPPER", "SHIPPER_CARRIER", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Seuls les expéditeurs peuvent créer des demandes")
     
     request_doc = {
