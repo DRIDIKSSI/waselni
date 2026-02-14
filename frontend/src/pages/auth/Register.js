@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Checkbox } from '../../components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -13,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select';
-import { Package, Eye, EyeOff, Loader2, User, Truck, Building2 } from 'lucide-react';
+import { Package, Eye, EyeOff, Loader2, User, Truck, Building2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Register = () => {
@@ -34,21 +35,34 @@ const Register = () => {
     country: '',
     city: ''
   });
+  
+  // États pour les checkboxes de rôle
+  const [isShipper, setIsShipper] = useState(false);
+  const [isCarrier, setIsCarrier] = useState(false);
+  const [carrierType, setCarrierType] = useState('individual'); // 'individual' ou 'pro'
 
-  const roles = [
-    { value: 'SHIPPER', label: t('auth.shipper'), icon: User, description: t('auth.shipperDesc') },
-    { value: 'CARRIER_INDIVIDUAL', label: t('auth.carrier'), icon: Truck, description: t('auth.carrierDesc') },
-    { value: 'CARRIER_PRO', label: t('auth.carrierPro'), icon: Building2, description: t('auth.carrierProDesc') }
-  ];
+  // Calculer le rôle final basé sur les sélections
+  const computeRole = () => {
+    if (isShipper && isCarrier) {
+      return 'SHIPPER_CARRIER';
+    } else if (isShipper) {
+      return 'SHIPPER';
+    } else if (isCarrier) {
+      return carrierType === 'pro' ? 'CARRIER_PRO' : 'CARRIER_INDIVIDUAL';
+    }
+    return '';
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (step === 1) {
-      if (!formData.role) {
-        toast.error(t('errors.required'));
+      const role = computeRole();
+      if (!role) {
+        toast.error(t('auth.selectAtLeastOneRole') || 'Veuillez sélectionner au moins un profil');
         return;
       }
+      setFormData({ ...formData, role });
       setStep(2);
       return;
     }
@@ -77,6 +91,18 @@ const Register = () => {
     }
   };
 
+  // Obtenir le résumé des rôles sélectionnés
+  const getRoleSummary = () => {
+    const roles = [];
+    if (isShipper) roles.push(t('auth.shipper') || 'Expéditeur');
+    if (isCarrier) {
+      roles.push(carrierType === 'pro' 
+        ? (t('auth.carrierPro') || 'Transporteur Pro')
+        : (t('auth.carrier') || 'Transporteur'));
+    }
+    return roles.join(' + ');
+  };
+
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-6 bg-gradient-to-b from-secondary/30 to-white" data-testid="register-page">
       <Card className="w-full max-w-lg shadow-2xl rounded-3xl border-0">
@@ -88,7 +114,7 @@ const Register = () => {
           </Link>
           <CardTitle className="text-2xl font-bold">{t('auth.registerTitle')}</CardTitle>
           <CardDescription className="text-base">
-            {step === 1 ? t('auth.selectRole') : t('auth.registerSubtitle')}
+            {step === 1 ? (t('auth.selectRole') || 'Choisissez votre profil') : t('auth.registerSubtitle')}
           </CardDescription>
           
           {/* Progress indicator */}
@@ -101,41 +127,152 @@ const Register = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {step === 1 ? (
-              <div className="space-y-4">
-                {roles.map((role) => (
-                  <button
-                    key={role.value}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, role: role.value })}
-                    className={`w-full p-5 rounded-2xl border-2 text-left transition-all duration-300 flex items-start gap-4 ${
-                      formData.role === role.value
-                        ? 'border-primary bg-primary/5 shadow-md'
-                        : 'border-border hover:border-primary/50 hover:bg-secondary/30'
-                    }`}
-                    data-testid={`role-${role.value.toLowerCase()}`}
-                  >
+              <div className="space-y-5">
+                {/* Option Expéditeur */}
+                <div
+                  className={`p-5 rounded-2xl border-2 transition-all duration-300 ${
+                    isShipper
+                      ? 'border-primary bg-primary/5 shadow-md'
+                      : 'border-border hover:border-primary/50 hover:bg-secondary/30'
+                  }`}
+                >
+                  <label className="flex items-start gap-4 cursor-pointer">
+                    <Checkbox
+                      id="shipper-checkbox"
+                      checked={isShipper}
+                      onCheckedChange={(checked) => setIsShipper(checked)}
+                      className="mt-1 h-5 w-5"
+                      data-testid="role-shipper-checkbox"
+                    />
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
-                      formData.role === role.value ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+                      isShipper ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
                     }`}>
-                      <role.icon className="w-6 h-6" />
+                      <User className="w-6 h-6" />
                     </div>
-                    <div>
-                      <div className="font-semibold text-foreground">{role.label}</div>
-                      <div className="text-sm text-muted-foreground">{role.description}</div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-foreground flex items-center gap-2">
+                        {t('auth.shipper') || 'Expéditeur'}
+                        {isShipper && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {t('auth.shipperDesc') || 'Je veux envoyer des colis'}
+                      </div>
                     </div>
-                  </button>
-                ))}
+                  </label>
+                </div>
+
+                {/* Option Transporteur */}
+                <div
+                  className={`p-5 rounded-2xl border-2 transition-all duration-300 ${
+                    isCarrier
+                      ? 'border-primary bg-primary/5 shadow-md'
+                      : 'border-border hover:border-primary/50 hover:bg-secondary/30'
+                  }`}
+                >
+                  <label className="flex items-start gap-4 cursor-pointer">
+                    <Checkbox
+                      id="carrier-checkbox"
+                      checked={isCarrier}
+                      onCheckedChange={(checked) => setIsCarrier(checked)}
+                      className="mt-1 h-5 w-5"
+                      data-testid="role-carrier-checkbox"
+                    />
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
+                      isCarrier ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      <Truck className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-foreground flex items-center gap-2">
+                        {t('auth.carrier') || 'Transporteur'}
+                        {isCarrier && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {t('auth.carrierDesc') || 'Je veux transporter des colis'}
+                      </div>
+                    </div>
+                  </label>
+                  
+                  {/* Options de type de transporteur */}
+                  {isCarrier && (
+                    <div className="ml-16 mt-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
+                      <div className="text-sm font-medium text-muted-foreground mb-2">
+                        {t('auth.carrierTypeQuestion') || 'Type de transporteur :'}
+                      </div>
+                      <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-secondary/50">
+                        <input
+                          type="radio"
+                          name="carrierType"
+                          value="individual"
+                          checked={carrierType === 'individual'}
+                          onChange={() => setCarrierType('individual')}
+                          className="w-4 h-4 text-primary"
+                          data-testid="carrier-type-individual"
+                        />
+                        <Truck className="w-5 h-5 text-muted-foreground" />
+                        <div>
+                          <div className="font-medium text-sm">{t('auth.carrierIndividual') || 'Particulier'}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t('auth.carrierIndividualDesc') || 'Transport occasionnel'}
+                          </div>
+                        </div>
+                      </label>
+                      <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-secondary/50">
+                        <input
+                          type="radio"
+                          name="carrierType"
+                          value="pro"
+                          checked={carrierType === 'pro'}
+                          onChange={() => setCarrierType('pro')}
+                          className="w-4 h-4 text-primary"
+                          data-testid="carrier-type-pro"
+                        />
+                        <Building2 className="w-5 h-5 text-muted-foreground" />
+                        <div>
+                          <div className="font-medium text-sm">{t('auth.carrierPro') || 'Professionnel'}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t('auth.carrierProDesc') || 'Entreprise de transport (vérification requise)'}
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                {/* Résumé des sélections */}
+                {(isShipper || isCarrier) && (
+                  <div className="bg-primary/10 rounded-xl p-4 text-center animate-in fade-in duration-200">
+                    <div className="text-sm text-muted-foreground">
+                      {t('auth.selectedProfile') || 'Profil sélectionné :'}
+                    </div>
+                    <div className="font-semibold text-primary text-lg mt-1">
+                      {getRoleSummary()}
+                    </div>
+                    {isShipper && isCarrier && (
+                      <div className="text-xs text-muted-foreground mt-2">
+                        {t('auth.dualRoleInfo') || 'Vous pourrez envoyer ET transporter des colis'}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <Button 
                   type="submit" 
                   className="w-full h-12 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 mt-6"
+                  disabled={!isShipper && !isCarrier}
                   data-testid="register-next"
                 >
-                  {t('common.next')}
+                  {t('common.next') || 'Suivant'}
                 </Button>
               </div>
             ) : (
               <>
+                {/* Afficher le rôle choisi */}
+                <div className="bg-secondary/50 rounded-xl p-3 text-center mb-4">
+                  <span className="text-sm text-muted-foreground">{t('auth.yourProfile') || 'Votre profil'} : </span>
+                  <span className="font-semibold text-primary">{getRoleSummary()}</span>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="first_name">{t('auth.firstName')}</Label>
@@ -259,7 +396,7 @@ const Register = () => {
                     className="flex-1 h-12 rounded-full"
                     onClick={() => setStep(1)}
                   >
-                    {t('common.back')}
+                    {t('common.back') || 'Retour'}
                   </Button>
                   <Button 
                     type="submit" 
@@ -273,7 +410,7 @@ const Register = () => {
                         {t('common.loading')}
                       </>
                     ) : (
-                      t('auth.registerButton')
+                      t('auth.registerButton') || "S'inscrire"
                     )}
                   </Button>
                 </div>
