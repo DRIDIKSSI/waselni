@@ -523,11 +523,313 @@ async def get_my_verification(user: dict = Depends(get_current_user)):
     verification = await db.pro_verifications.find_one({"user_id": user["id"]}, {"_id": 0})
     return verification
 
-# ==================== REQUESTS ROUTES ====================
-@api_router.post("/requests")
-async def create_request(data: RequestCreate, user: dict = Depends(get_current_user)):
-    if user["role"] not in ["SHIPPER", "SHIPPER_CARRIER", "ADMIN"]:
-        raise HTTPException(status_code=403, detail="Seuls les expéditeurs peuvent créer des demandes")
+# ==================== CARRIER IDENTITY VERIFICATION ====================
+@api_router.post("/carriers/verification/submit")
+async def submit_carrier_verification(data: CarrierVerificationCreate, user: dict = Depends(get_current_user)):
+    """Soumettre une demande de vérification d'identité pour transporteur"""
+    if user["role"] not in ["CARRIER_INDIVIDUAL", "CARRIER_PRO", "SHIPPER_CARRIER"]:
+        raise HTTPException(status_code=403, detail="Réservé aux transporteurs")
+    
+    # Vérifier si une vérification existe déjà
+    existing = await db.carrier_verifications.find_one({"user_id": user["id"]})
+    if existing and existing.get("status") == "VERIFIED":
+        raise HTTPException(status_code=400, detail="Identité déjà vérifiée")
+    
+    verification = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "identity_doc_type": data.identity_doc_type.value,
+        "identity_first_name": data.identity_first_name,
+        "identity_last_name": data.identity_last_name,
+        "identity_birth_date": data.identity_birth_date,
+        "identity_doc_number": data.identity_doc_number,
+        "identity_doc_url": None,
+        "address_street": data.address_street,
+        "address_city": data.address_city,
+        "address_postal_code": data.address_postal_code,
+        "address_country": data.address_country,
+        "address_proof_url": None,
+        "address_proof_date": None,
+        "status": "PENDING",
+        "rejection_reason": None,
+        "verified_at": None,
+        "verified_by": None,
+        "created_at": now_utc(),
+        "updated_at": now_utc()
+    }
+    
+    if existing:
+        await db.carrier_verifications.update_one(
+            {"user_id": user["id"]},
+            {"$set": {**verification, "id": existing["id"]}}
+        )
+        verification["id"] = existing["id"]
+    else:
+        await db.carrier_verifications.insert_one(verification)
+    
+    return serialize_doc(verification)
+
+@api_router.post("/carriers/verification/identity-document")
+async def upload_identity_document(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    """Uploader la pièce d'identité (Passeport, Titre de séjour, Permis)"""
+    if user["role"] not in ["CARRIER_INDIVIDUAL", "CARRIER_PRO", "SHIPPER_CARRIER"]:
+        raise HTTPException(status_code=403, detail="Réservé aux transporteurs")
+    
+    verification = await db.carrier_verifications.find_one({"user_id": user["id"]})
+    if not verification:
+        raise HTTPException(status_code=400, detail="Veuillez d'abord soumettre vos informations")
+    
+    # Valider le type de fichier
+    allowed_extensions = ["jpg", "jpeg", "png", "pdf"]
+    ext = file.filename.split(".")[-1].lower() if file.filename else ""
+    if ext not in allowed_extensions:
+        raise HTTPException(status_code=400, detail="Format accepté: JPG, PNG, PDF")
+    
+    filename = f"identity_{user['id']}_{uuid.uuid4()}.{ext}"
+    filepath = UPLOAD_DIR / filename
+    
+    with open(filepath, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    
+    doc_url = f"/uploads/{filename}"
+    await db.carrier_verifications.update_one(
+        {"user_id": user["id"]},
+        {"$set": {"identity_doc_url": doc_url, "updated_at": now_utc()}}
+    )
+    
+    return {"identity_doc_url": doc_url, "message": "Pièce d'identité uploadée"}
+
+@api_router.post("/carriers/verification/address-proof")
+async def upload_address_proof(
+    file: UploadFile = File(...),
+    document_date: str = Query(..., description="Date du document (YYYY-MM-DD)"),
+    user: dict = Depends(get_current_user)
+):
+    """Uploader le justificatif de domicile (facture de moins de 3 mois)"""
+    if user["role"] not in ["CARRIER_INDIVIDUAL", "CARRIER_PRO", "SHIPPER_CARRIER"]:
+        raise HTTPException(status_code=403, detail="Réservé aux transporteurs")
+    
+    verification = await db.carrier_verifications.find_one({"user_id": user["id"]})
+    if not verification:
+        raise HTTPException(status_code=400, detail="Veuillez d'abord soumettre vos informations")
+    
+    # Vérifier que la date du document est de moins de 3 mois
+    try:
+        doc_date = datetime.fromisoformat(document_date.replace('Z', '+00:00'))
+        if doc_date.tzinfo is None:
+            doc_date = doc_date.replace(tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
+        diff_days = (now - doc_date).days
+        if diff_days > 90:
+            raise HTTPException(status_code=400, detail="Le justificatif doit être daté de moins de 3 mois")
+        if diff_days < 0:
+            raise HTTPException(status_code=400, detail="La date du document ne peut pas être dans le futur")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Format de date invalide (YYYY-MM-DD)")
+    
+    # Valider le type de fichier
+    allowed_extensions = ["jpg", "jpeg", "png", "pdf"]
+    ext = file.filename.split(".")[-1].lower() if file.filename else ""
+    if ext not in allowed_extensions:
+        raise HTTPException(status_code=400, detail="Format accepté: JPG, PNG, PDF")
+    
+    filename = f"address_{user['id']}_{uuid.uuid4()}.{ext}"
+    filepath = UPLOAD_DIR / filename
+    
+    with open(filepath, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    
+    doc_url = f"/uploads/{filename}"
+    await db.carrier_verifications.update_one(
+        {"user_id": user["id"]},
+        {"$set": {
+            "address_proof_url": doc_url,
+            "address_proof_date": document_date,
+            "updated_at": now_utc()
+        }}
+    )
+    
+    return {"address_proof_url": doc_url, "message": "Justificatif de domicile uploadé"}
+
+@api_router.get("/carriers/verification/status")
+async def get_carrier_verification_status(user: dict = Depends(get_current_user)):
+    """Obtenir le statut de vérification du transporteur"""
+    if user["role"] not in ["CARRIER_INDIVIDUAL", "CARRIER_PRO", "SHIPPER_CARRIER"]:
+        raise HTTPException(status_code=403, detail="Réservé aux transporteurs")
+    
+    verification = await db.carrier_verifications.find_one({"user_id": user["id"]}, {"_id": 0})
+    if not verification:
+        return {
+            "status": "NOT_STARTED",
+            "message": "Aucune vérification soumise",
+            "is_verified": False
+        }
+    
+    return {
+        **verification,
+        "is_verified": verification.get("status") == "VERIFIED",
+        "documents_complete": bool(verification.get("identity_doc_url") and verification.get("address_proof_url"))
+    }
+
+# ==================== ADMIN CARRIER VERIFICATION ====================
+@api_router.get("/admin/carrier-verifications")
+async def admin_list_carrier_verifications(
+    user: dict = Depends(get_current_user),
+    status: Optional[str] = None,
+    page: int = 1,
+    limit: int = 20
+):
+    """Liste des demandes de vérification d'identité des transporteurs"""
+    await require_role(user, ["ADMIN"])
+    
+    query = {}
+    if status:
+        query["status"] = status
+    
+    skip = (page - 1) * limit
+    verifications = await db.carrier_verifications.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    total = await db.carrier_verifications.count_documents(query)
+    
+    # Enrichir avec les données utilisateur
+    for v in verifications:
+        carrier = await db.users.find_one(
+            {"id": v["user_id"]},
+            {"_id": 0, "first_name": 1, "last_name": 1, "email": 1, "phone": 1, "role": 1, "created_at": 1}
+        )
+        v["user"] = carrier
+        
+        # Vérifier la correspondance des noms
+        if carrier:
+            v["name_match"] = (
+                v.get("identity_first_name", "").lower().strip() == carrier.get("first_name", "").lower().strip() and
+                v.get("identity_last_name", "").lower().strip() == carrier.get("last_name", "").lower().strip()
+            )
+        
+        # Vérifier si le justificatif est toujours valide (moins de 3 mois)
+        if v.get("address_proof_date"):
+            try:
+                doc_date = datetime.fromisoformat(v["address_proof_date"].replace('Z', '+00:00'))
+                if doc_date.tzinfo is None:
+                    doc_date = doc_date.replace(tzinfo=timezone.utc)
+                diff_days = (datetime.now(timezone.utc) - doc_date).days
+                v["address_proof_valid"] = diff_days <= 90
+                v["address_proof_age_days"] = diff_days
+            except:
+                v["address_proof_valid"] = False
+        else:
+            v["address_proof_valid"] = None
+    
+    return {"items": verifications, "total": total, "page": page, "pages": (total + limit - 1) // limit}
+
+@api_router.get("/admin/carrier-verifications/{verification_id}")
+async def admin_get_carrier_verification(verification_id: str, user: dict = Depends(get_current_user)):
+    """Détails d'une demande de vérification"""
+    await require_role(user, ["ADMIN"])
+    
+    verification = await db.carrier_verifications.find_one({"id": verification_id}, {"_id": 0})
+    if not verification:
+        raise HTTPException(status_code=404, detail="Vérification non trouvée")
+    
+    carrier = await db.users.find_one(
+        {"id": verification["user_id"]},
+        {"_id": 0, "first_name": 1, "last_name": 1, "email": 1, "phone": 1, "role": 1, "country": 1, "city": 1, "created_at": 1}
+    )
+    verification["user"] = carrier
+    
+    # Vérifier la correspondance des noms
+    if carrier:
+        verification["name_match"] = (
+            verification.get("identity_first_name", "").lower().strip() == carrier.get("first_name", "").lower().strip() and
+            verification.get("identity_last_name", "").lower().strip() == carrier.get("last_name", "").lower().strip()
+        )
+    
+    return verification
+
+@api_router.patch("/admin/carrier-verifications/{verification_id}/approve")
+async def admin_approve_carrier_verification(verification_id: str, user: dict = Depends(get_current_user)):
+    """Approuver la vérification d'identité d'un transporteur"""
+    await require_role(user, ["ADMIN"])
+    
+    verification = await db.carrier_verifications.find_one({"id": verification_id})
+    if not verification:
+        raise HTTPException(status_code=404, detail="Vérification non trouvée")
+    
+    # Vérifier que tous les documents sont présents
+    if not verification.get("identity_doc_url"):
+        raise HTTPException(status_code=400, detail="Pièce d'identité manquante")
+    if not verification.get("address_proof_url"):
+        raise HTTPException(status_code=400, detail="Justificatif de domicile manquant")
+    
+    await db.carrier_verifications.update_one(
+        {"id": verification_id},
+        {"$set": {
+            "status": "VERIFIED",
+            "verified_at": now_utc(),
+            "verified_by": user["id"],
+            "rejection_reason": None,
+            "updated_at": now_utc()
+        }}
+    )
+    
+    # Mettre à jour l'utilisateur comme vérifié
+    await db.users.update_one(
+        {"id": verification["user_id"]},
+        {"$set": {"identity_verified": True, "identity_verified_at": now_utc()}}
+    )
+    
+    # Log d'audit
+    await db.audit_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "admin_id": user["id"],
+        "action": "APPROVE_CARRIER_VERIFICATION",
+        "entity_type": "CARRIER_VERIFICATION",
+        "entity_id": verification_id,
+        "target_user_id": verification["user_id"],
+        "created_at": now_utc()
+    })
+    
+    return {"message": "Vérification approuvée", "status": "VERIFIED"}
+
+@api_router.patch("/admin/carrier-verifications/{verification_id}/reject")
+async def admin_reject_carrier_verification(
+    verification_id: str,
+    reason: str = Query(..., description="Motif du rejet"),
+    user: dict = Depends(get_current_user)
+):
+    """Rejeter la vérification d'identité d'un transporteur"""
+    await require_role(user, ["ADMIN"])
+    
+    verification = await db.carrier_verifications.find_one({"id": verification_id})
+    if not verification:
+        raise HTTPException(status_code=404, detail="Vérification non trouvée")
+    
+    await db.carrier_verifications.update_one(
+        {"id": verification_id},
+        {"$set": {
+            "status": "REJECTED",
+            "rejection_reason": reason,
+            "verified_at": None,
+            "verified_by": None,
+            "updated_at": now_utc()
+        }}
+    )
+    
+    # Log d'audit
+    await db.audit_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "admin_id": user["id"],
+        "action": "REJECT_CARRIER_VERIFICATION",
+        "entity_type": "CARRIER_VERIFICATION",
+        "entity_id": verification_id,
+        "target_user_id": verification["user_id"],
+        "details": reason,
+        "created_at": now_utc()
+    })
+    
+    return {"message": "Vérification rejetée", "status": "REJECTED", "reason": reason}
     
     request_doc = {
         "id": str(uuid.uuid4()),
