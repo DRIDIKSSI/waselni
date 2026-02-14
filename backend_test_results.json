@@ -1,0 +1,86 @@
+{
+  "total_tests": 13,
+  "passed_tests": 13,
+  "failed_tests": 0,
+  "success_rate": 100.0,
+  "results": [
+    {
+      "test": "Login SHIPPER_CARRIER user",
+      "success": true,
+      "details": "Status: 200 (expected 200)",
+      "timestamp": "2026-02-14T11:49:34.541025"
+    },
+    {
+      "test": "Verify role after login",
+      "success": true,
+      "details": "Role: SHIPPER_CARRIER",
+      "timestamp": "2026-02-14T11:49:34.541603"
+    },
+    {
+      "test": "Get user profile",
+      "success": true,
+      "details": "Status: 200 (expected 200)",
+      "timestamp": "2026-02-14T11:49:34.681758"
+    },
+    {
+      "test": "Profile role check",
+      "success": true,
+      "details": "Role: SHIPPER_CARRIER",
+      "timestamp": "2026-02-14T11:49:34.682387"
+    },
+    {
+      "test": "Create shipping request",
+      "success": true,
+      "details": "Status: 200 (expected 200)",
+      "timestamp": "2026-02-14T11:49:34.784918"
+    },
+    {
+      "test": "Request creation success",
+      "success": true,
+      "details": "Request ID: a8ce5122-ab91-4657-b35b-79f067b3a22d",
+      "timestamp": "2026-02-14T11:49:34.785561"
+    },
+    {
+      "test": "Verify request details",
+      "success": true,
+      "details": "Status: 200 (expected 200)",
+      "timestamp": "2026-02-14T11:49:34.940755"
+    },
+    {
+      "test": "Create carrier offer",
+      "success": true,
+      "details": "Status: 200 (expected 200)",
+      "timestamp": "2026-02-14T11:49:35.050862"
+    },
+    {
+      "test": "Offer creation success",
+      "success": true,
+      "details": "Offer ID: 93212133-9956-48ee-bc72-e11a51a6c829",
+      "timestamp": "2026-02-14T11:49:35.051515"
+    },
+    {
+      "test": "Verify offer details",
+      "success": true,
+      "details": "Status: 200 (expected 200)",
+      "timestamp": "2026-02-14T11:49:35.155298"
+    },
+    {
+      "test": "Get my requests",
+      "success": true,
+      "details": "Status: 200 (expected 200)",
+      "timestamp": "2026-02-14T11:49:35.268013"
+    },
+    {
+      "test": "Get my offers",
+      "success": true,
+      "details": "Status: 200 (expected 200)",
+      "timestamp": "2026-02-14T11:49:35.370036"
+    },
+    {
+      "test": "Get my contracts",
+      "success": true,
+      "details": "Status: 200 (expected 200)",
+      "timestamp": "2026-02-14T11:49:35.536696"
+    }
+  ]
+}
