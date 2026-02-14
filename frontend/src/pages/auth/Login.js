@@ -125,25 +125,6 @@ const Login = () => {
               </Link>
             </p>
           </form>
-
-          {/* Demo accounts info */}
-          <div className="mt-8 p-4 bg-muted/50 rounded-xl">
-            <p className="text-xs text-muted-foreground text-center mb-3">Demo:</p>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Admin:</span>
-                <span className="font-mono">admin@logimatch.com / admin123</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('auth.shipper')}:</span>
-                <span className="font-mono">marie@example.com / password123</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('auth.carrier')}:</span>
-                <span className="font-mono">transport.pro@example.com / password123</span>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>
