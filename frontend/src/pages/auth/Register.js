@@ -100,7 +100,7 @@ const Register = () => {
         ? (t('auth.carrierPro') || 'Transporteur Pro')
         : (t('auth.carrier') || 'Transporteur'));
     }
-    return roles.join(' + ');
+    return roles.join(' et ');
   };
 
   return (
