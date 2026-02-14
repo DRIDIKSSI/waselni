@@ -944,6 +944,14 @@ async def create_contract(data: ContractCreate, user: dict = Depends(get_current
     elif user["role"] == "SHIPPER":
         shipper_id = user["id"]
         carrier_id = data.carrier_id
+    elif user["role"] == "SHIPPER_CARRIER":
+        # L'utilisateur peut être expéditeur ou transporteur selon le contexte
+        if req["user_id"] == user["id"]:
+            shipper_id = user["id"]
+            carrier_id = data.carrier_id
+        else:
+            shipper_id = req["user_id"]
+            carrier_id = user["id"]
     else:
         shipper_id = req["user_id"]
         carrier_id = data.carrier_id
