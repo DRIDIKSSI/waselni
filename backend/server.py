@@ -58,6 +58,128 @@ security = HTTPBearer()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# ==================== EMAIL SERVICE ====================
+async def send_email(to_email: str, subject: str, html_content: str):
+    """Envoyer un email via Resend (non-bloquant)"""
+    if not resend.api_key:
+        logger.warning("RESEND_API_KEY not configured, skipping email")
+        return None
+    
+    try:
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [to_email],
+            "subject": subject,
+            "html": html_content
+        }
+        result = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Email sent to {to_email}: {subject}")
+        return result
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {str(e)}")
+        return None
+
+async def send_admin_verification_alert(user_name: str, user_email: str, doc_type: str):
+    """Notifier l'admin d'une nouvelle demande de vérification"""
+    html = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 30px; text-align: center;">
+            <h1 style="color: white; margin: 0;">🪪 Nouvelle Vérification</h1>
+        </div>
+        <div style="padding: 30px; background: #f8f9fa;">
+            <h2 style="color: #1e3a5f;">Demande de vérification d'identité</h2>
+            <p>Un transporteur a soumis une demande de vérification :</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <tr style="background: white;">
+                    <td style="padding: 12px; border: 1px solid #ddd;"><strong>Nom</strong></td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">{user_name}</td>
+                </tr>
+                <tr style="background: white;">
+                    <td style="padding: 12px; border: 1px solid #ddd;"><strong>Email</strong></td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">{user_email}</td>
+                </tr>
+                <tr style="background: white;">
+                    <td style="padding: 12px; border: 1px solid #ddd;"><strong>Type de document</strong></td>
+                    <td style="padding: 12px; border: 1px solid #ddd;">{doc_type}</td>
+                </tr>
+            </table>
+            <p style="text-align: center;">
+                <a href="https://waselni.com/admin" style="display: inline-block; padding: 15px 30px; background: #1e3a5f; color: white; text-decoration: none; border-radius: 8px;">
+                    Voir dans l'admin
+                </a>
+            </p>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+            <p>Waselni - Plateforme France ↔ Tunisie</p>
+        </div>
+    </div>
+    """
+    await send_email(ADMIN_EMAIL, f"🪪 Nouvelle vérification - {user_name}", html)
+
+async def send_verification_approved_email(to_email: str, user_name: str):
+    """Notifier l'utilisateur que sa vérification est approuvée"""
+    html = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); padding: 30px; text-align: center;">
+            <h1 style="color: white; margin: 0;">✅ Identité Vérifiée</h1>
+        </div>
+        <div style="padding: 30px; background: #f8f9fa;">
+            <h2 style="color: #16a34a;">Félicitations {user_name} !</h2>
+            <p>Votre identité a été vérifiée avec succès.</p>
+            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22c55e;">
+                <p style="margin: 0;"><strong>Ce que cela signifie :</strong></p>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>Votre profil affiche désormais le badge "Vérifié" ✅</li>
+                    <li>Les expéditeurs ont plus confiance pour vous confier leurs colis</li>
+                    <li>Vous pouvez maintenant proposer vos services en toute confiance</li>
+                </ul>
+            </div>
+            <p style="text-align: center;">
+                <a href="https://waselni.com/dashboard" style="display: inline-block; padding: 15px 30px; background: #22c55e; color: white; text-decoration: none; border-radius: 8px;">
+                    Accéder à mon tableau de bord
+                </a>
+            </p>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+            <p>Waselni - Plateforme France ↔ Tunisie</p>
+        </div>
+    </div>
+    """
+    await send_email(to_email, "✅ Votre identité a été vérifiée - Waselni", html)
+
+async def send_verification_rejected_email(to_email: str, user_name: str, reason: str):
+    """Notifier l'utilisateur que sa vérification est rejetée"""
+    html = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 30px; text-align: center;">
+            <h1 style="color: white; margin: 0;">❌ Vérification Refusée</h1>
+        </div>
+        <div style="padding: 30px; background: #f8f9fa;">
+            <h2 style="color: #dc2626;">Bonjour {user_name},</h2>
+            <p>Malheureusement, votre demande de vérification d'identité n'a pas pu être validée.</p>
+            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
+                <p style="margin: 0;"><strong>Motif du refus :</strong></p>
+                <p style="margin: 10px 0 0 0; color: #666;">{reason}</p>
+            </div>
+            <p><strong>Que faire maintenant ?</strong></p>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Vérifiez que vos documents sont lisibles et non expirés</li>
+                <li>Assurez-vous que les informations correspondent à votre profil</li>
+                <li>Le justificatif de domicile doit être daté de moins de 3 mois</li>
+            </ul>
+            <p style="text-align: center;">
+                <a href="https://waselni.com/carrier/verification" style="display: inline-block; padding: 15px 30px; background: #1e3a5f; color: white; text-decoration: none; border-radius: 8px;">
+                    Soumettre à nouveau
+                </a>
+            </p>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
+            <p>Waselni - Plateforme France ↔ Tunisie</p>
+        </div>
+    </div>
+    """
+    await send_email(to_email, "❌ Vérification refusée - Action requise", html)
+
 # ==================== ENUMS ====================
 class UserRole(str, Enum):
     SHIPPER = "SHIPPER"
