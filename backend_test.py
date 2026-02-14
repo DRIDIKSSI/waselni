@@ -1,329 +1,425 @@
+#!/usr/bin/env python3
+"""
+Backend API Testing for Carrier Identity Verification System
+Tests all carrier verification endpoints and admin approval/rejection workflow
+"""
+
 import requests
 import json
 import sys
-from datetime import datetime
+import io
+from datetime import datetime, timedelta
+from pathlib import Path
 
-class LogimatchAPITester:
+class CarrierVerificationTester:
     def __init__(self, base_url="https://exec-loader.preview.emergentagent.com"):
-        self.base_url = base_url
-        self.token = None
+        self.base_url = base_url.rstrip('/')
+        self.carrier_token = None
+        self.admin_token = None
         self.tests_run = 0
         self.tests_passed = 0
-        self.results = []
-
-    def log_result(self, name, success, details=""):
-        """Log test result"""
-        self.tests_run += 1
-        if success:
-            self.tests_passed += 1
+        self.verification_id = None
         
-        result = {
-            "test": name,
-            "success": success,
-            "details": details,
-            "timestamp": datetime.now().isoformat()
-        }
-        self.results.append(result)
-        
-        status = "✅ PASS" if success else "❌ FAIL"
-        print(f"{status} - {name}: {details}")
+        print(f"🔧 Testing Carrier Identity Verification System")
+        print(f"Base URL: {self.base_url}")
+        print("=" * 60)
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
+    def run_test(self, name, method, endpoint, expected_status, data=None, files=None, headers=None):
         """Run a single API test"""
         url = f"{self.base_url}/api/{endpoint}"
+        test_headers = {'Content-Type': 'application/json'}
         
-        default_headers = {'Content-Type': 'application/json'}
-        if self.token:
-            default_headers['Authorization'] = f'Bearer {self.token}'
         if headers:
-            default_headers.update(headers)
+            test_headers.update(headers)
+        
+        if files:
+            # Remove Content-Type for file uploads
+            if 'Content-Type' in test_headers:
+                del test_headers['Content-Type']
 
-        print(f"\n🔍 Testing {name}...")
+        self.tests_run += 1
+        print(f"\n🔍 Test {self.tests_run}: {name}")
+        print(f"   {method} {endpoint}")
         
         try:
             if method == 'GET':
-                response = requests.get(url, headers=default_headers, timeout=10)
+                response = requests.get(url, headers=test_headers, params=data)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=default_headers, timeout=10)
+                if files:
+                    response = requests.post(url, files=files, data=data, headers=test_headers)
+                else:
+                    response = requests.post(url, json=data, headers=test_headers)
             elif method == 'PATCH':
-                response = requests.patch(url, json=data, headers=default_headers, timeout=10)
-            elif method == 'DELETE':
-                response = requests.delete(url, headers=default_headers, timeout=10)
+                response = requests.patch(url, json=data, headers=test_headers)
             else:
-                self.log_result(name, False, f"Unsupported method: {method}")
-                return False, {}
+                response = requests.request(method, url, json=data, headers=test_headers)
 
             success = response.status_code == expected_status
-            details = f"Status: {response.status_code} (expected {expected_status})"
-            
-            if not success:
+            if success:
+                self.tests_passed += 1
+                print(f"   ✅ PASSED - Status: {response.status_code}")
                 try:
-                    error_detail = response.json()
-                    details += f" - {error_detail.get('detail', 'No error details')}"
+                    return response.json() if response.content else {}
                 except:
-                    details += f" - Response: {response.text[:100]}"
-            
-            self.log_result(name, success, details)
-            
-            try:
-                return success, response.json() if success else {}
-            except:
-                return success, {"raw_response": response.text}
-
-        except requests.exceptions.RequestException as e:
-            self.log_result(name, False, f"Request failed: {str(e)}")
-            return False, {}
-
-    def test_combined_role_registration(self):
-        """Test SHIPPER_CARRIER role registration"""
-        print("\n=== Testing Combined Role Registration ===")
-        
-        # Test data for combined role
-        test_data = {
-            "email": "both@example.com",
-            "password": "password123",
-            "role": "SHIPPER_CARRIER",
-            "first_name": "Test",
-            "last_name": "Both",
-            "phone": "+33123456789",
-            "country": "France",
-            "city": "Paris"
-        }
-        
-        success, response = self.run_test(
-            "Register SHIPPER_CARRIER user",
-            "POST",
-            "auth/register",
-            200,
-            data=test_data
-        )
-        
-        if success:
-            self.token = response.get('access_token')
-            user = response.get('user', {})
-            
-            # Verify user role
-            if user.get('role') == 'SHIPPER_CARRIER':
-                self.log_result("Verify SHIPPER_CARRIER role", True, "Role correctly set")
+                    return {"message": "No JSON response"}
             else:
-                self.log_result("Verify SHIPPER_CARRIER role", False, f"Expected SHIPPER_CARRIER, got {user.get('role')}")
-                
-            return True
-        
-        return False
+                print(f"   ❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                print(f"   Response: {response.text[:200]}")
+                return {}
 
-    def test_login_combined_role(self):
-        """Test login with existing combined role user"""
-        print("\n=== Testing Combined Role Login ===")
-        
-        # Try login with the test account
-        login_data = {
-            "email": "both@example.com",
-            "password": "password123"
-        }
-        
-        success, response = self.run_test(
-            "Login SHIPPER_CARRIER user",
-            "POST",
+        except Exception as e:
+            print(f"   ❌ FAILED - Error: {str(e)}")
+            return {}
+
+    def login_carrier(self):
+        """Login as carrier to get auth token"""
+        print("\n🔑 Logging in as carrier...")
+        response = self.run_test(
+            "Carrier Login",
+            "POST", 
             "auth/login",
             200,
-            data=login_data
+            data={"email": "transport.pro@example.com", "password": "password123"}
         )
         
-        if success:
-            self.token = response.get('access_token')
-            user = response.get('user', {})
-            
-            # Verify user role and permissions
-            if user.get('role') == 'SHIPPER_CARRIER':
-                self.log_result("Verify role after login", True, f"Role: {user.get('role')}")
-                return True
-            else:
-                self.log_result("Verify role after login", False, f"Expected SHIPPER_CARRIER, got {user.get('role')}")
-        
-        return False
+        if response.get('access_token'):
+            self.carrier_token = response['access_token']
+            print(f"   🎟️ Carrier token obtained")
+            return True
+        else:
+            print(f"   ❌ Failed to get carrier token")
+            return False
 
-    def test_user_profile(self):
-        """Test user profile endpoint"""
-        print("\n=== Testing User Profile ===")
-        
-        success, response = self.run_test(
-            "Get user profile",
-            "GET", 
-            "users/me",
-            200
-        )
-        
-        if success:
-            role = response.get('role')
-            if role == 'SHIPPER_CARRIER':
-                self.log_result("Profile role check", True, f"Role: {role}")
-            else:
-                self.log_result("Profile role check", False, f"Expected SHIPPER_CARRIER, got {role}")
-
-    def test_create_request(self):
-        """Test creating a shipping request (shipper functionality)"""
-        print("\n=== Testing Request Creation (Shipper Role) ===")
-        
-        request_data = {
-            "origin_country": "France",
-            "origin_city": "Paris",
-            "destination_country": "Tunisie",
-            "destination_city": "Tunis",
-            "weight": 5.0,
-            "width": 30.0,
-            "height": 20.0,
-            "length": 40.0,
-            "package_type": "Electronics",
-            "mode": "TERRESTRIAL",
-            "deadline": "2024-12-31T23:59:59",
-            "description": "Test package for combined role"
-        }
-        
-        success, response = self.run_test(
-            "Create shipping request",
+    def login_admin(self):
+        """Login as admin to get auth token"""  
+        print("\n🔑 Logging in as admin...")
+        response = self.run_test(
+            "Admin Login",
             "POST",
-            "requests",
+            "auth/login", 
             200,
-            data=request_data
+            data={"email": "admin@logimatch.com", "password": "admin123"}
         )
         
-        if success:
-            self.created_request_id = response.get('id')
-            self.log_result("Request creation success", True, f"Request ID: {self.created_request_id}")
-            
-            # Verify the request was created by SHIPPER_CARRIER user
-            self.run_test(
-                "Verify request details",
-                "GET",
-                f"requests/{self.created_request_id}",
-                200
-            )
-        
-        return success
+        if response.get('access_token'):
+            self.admin_token = response['access_token']
+            print(f"   🎟️ Admin token obtained")
+            return True
+        else:
+            print(f"   ❌ Failed to get admin token")
+            return False
 
-    def test_create_offer(self):
-        """Test creating a carrier offer (carrier functionality)"""
-        print("\n=== Testing Offer Creation (Carrier Role) ===")
+    def test_verification_status_initial(self):
+        """Test getting initial verification status"""
+        response = self.run_test(
+            "Get Verification Status (Initial)",
+            "GET",
+            "carriers/verification/status",
+            200,
+            headers={'Authorization': f'Bearer {self.carrier_token}'}
+        )
         
-        offer_data = {
-            "origin_country": "France",
-            "origin_city": "Paris", 
-            "destination_country": "Tunisie",
-            "destination_city": "Tunis",
-            "departure_date": "2024-12-20T10:00:00",
-            "arrival_date": "2024-12-22T18:00:00",
-            "capacity_kg": 50.0,
-            "mode": "TERRESTRIAL",
-            "price_per_kg": 5.5,
-            "conditions": "Test offer from combined role user"
+        print(f"   📊 Current status: {response.get('status', 'Unknown')}")
+        return response
+
+    def test_submit_verification_info(self):
+        """Test submitting carrier verification information"""
+        verification_data = {
+            "identity_doc_type": "PASSPORT",
+            "identity_first_name": "John",
+            "identity_last_name": "Doe", 
+            "identity_birth_date": "1985-06-15",
+            "identity_doc_number": "12AB34567",
+            "address_street": "123 Rue de la Paix",
+            "address_city": "Paris",
+            "address_postal_code": "75001", 
+            "address_country": "France"
         }
         
-        success, response = self.run_test(
-            "Create carrier offer",
+        response = self.run_test(
+            "Submit Verification Info",
             "POST",
-            "offers",
+            "carriers/verification/submit",
             200,
-            data=offer_data
+            data=verification_data,
+            headers={'Authorization': f'Bearer {self.carrier_token}'}
         )
         
-        if success:
-            self.created_offer_id = response.get('id')
-            self.log_result("Offer creation success", True, f"Offer ID: {self.created_offer_id}")
+        if response.get('id'):
+            self.verification_id = response['id']
+            print(f"   📝 Verification ID: {self.verification_id}")
+        
+        return response
+
+    def test_upload_identity_document(self):
+        """Test uploading identity document"""
+        # Create a dummy file for testing
+        dummy_file = io.BytesIO(b"This is a dummy identity document content for testing")
+        dummy_file.name = "passport.jpg"
+        
+        response = self.run_test(
+            "Upload Identity Document",
+            "POST",
+            "carriers/verification/identity-document",
+            200,
+            files={'file': dummy_file},
+            headers={'Authorization': f'Bearer {self.carrier_token}'}
+        )
+        
+        if response.get('identity_doc_url'):
+            print(f"   📄 Document URL: {response['identity_doc_url']}")
+        
+        return response
+
+    def test_upload_address_proof(self):
+        """Test uploading address proof with date validation"""
+        # Create a dummy file for testing
+        dummy_file = io.BytesIO(b"This is a dummy address proof document for testing")
+        dummy_file.name = "electricity_bill.pdf"
+        
+        # Use a date within the last 3 months
+        recent_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+        
+        response = self.run_test(
+            "Upload Address Proof (Valid Date)",
+            "POST",
+            f"carriers/verification/address-proof?document_date={recent_date}",
+            200,
+            files={'file': dummy_file},
+            headers={'Authorization': f'Bearer {self.carrier_token}'}
+        )
+        
+        if response.get('address_proof_url'):
+            print(f"   📄 Address proof URL: {response['address_proof_url']}")
+        
+        return response
+
+    def test_upload_address_proof_invalid_date(self):
+        """Test uploading address proof with invalid date (> 3 months)"""
+        dummy_file = io.BytesIO(b"This is an old address proof document")
+        dummy_file.name = "old_bill.pdf"
+        
+        # Use a date older than 3 months
+        old_date = (datetime.now() - timedelta(days=120)).strftime('%Y-%m-%d')
+        
+        self.run_test(
+            "Upload Address Proof (Invalid Date)",
+            "POST",
+            f"carriers/verification/address-proof?document_date={old_date}",
+            400,  # Should fail with 400
+            files={'file': dummy_file},
+            headers={'Authorization': f'Bearer {self.carrier_token}'}
+        )
+
+    def test_verification_status_complete(self):
+        """Test getting verification status after all documents uploaded"""
+        response = self.run_test(
+            "Get Verification Status (Complete)",
+            "GET",
+            "carriers/verification/status",
+            200,
+            headers={'Authorization': f'Bearer {self.carrier_token}'}
+        )
+        
+        print(f"   📊 Status: {response.get('status', 'Unknown')}")
+        print(f"   📋 Documents complete: {response.get('documents_complete', False)}")
+        print(f"   ✅ Is verified: {response.get('is_verified', False)}")
+        
+        return response
+
+    def test_admin_list_verifications(self):
+        """Test admin listing carrier verifications"""
+        response = self.run_test(
+            "Admin List Verifications",
+            "GET",
+            "admin/carrier-verifications",
+            200,
+            headers={'Authorization': f'Bearer {self.admin_token}'}
+        )
+        
+        items = response.get('items', [])
+        print(f"   📋 Found {len(items)} verification requests")
+        
+        # Find our test verification
+        for item in items:
+            if item.get('user', {}).get('email') == 'transport.pro@example.com':
+                self.verification_id = item['id']
+                print(f"   🎯 Found test verification: {self.verification_id}")
+                print(f"   📊 Status: {item.get('status', 'Unknown')}")
+                break
+        
+        return response
+
+    def test_admin_get_verification_details(self):
+        """Test admin getting specific verification details"""
+        if not self.verification_id:
+            print("   ⚠️ No verification ID available, skipping...")
+            return {}
             
-            # Verify the offer was created by SHIPPER_CARRIER user
-            self.run_test(
-                "Verify offer details",
-                "GET",
-                f"offers/{self.created_offer_id}",
-                200
-            )
-        
-        return success
-
-    def test_get_my_requests(self):
-        """Test getting user's requests"""
-        print("\n=== Testing My Requests ===")
-        
-        self.run_test(
-            "Get my requests",
+        response = self.run_test(
+            "Admin Get Verification Details",
             "GET",
-            "requests/mine",
-            200
+            f"admin/carrier-verifications/{self.verification_id}",
+            200,
+            headers={'Authorization': f'Bearer {self.admin_token}'}
         )
-
-    def test_get_my_offers(self):
-        """Test getting user's offers"""
-        print("\n=== Testing My Offers ===")
         
-        self.run_test(
-            "Get my offers",
+        if response:
+            print(f"   👤 User: {response.get('user', {}).get('first_name')} {response.get('user', {}).get('last_name')}")
+            print(f"   🪪 Doc type: {response.get('identity_doc_type', 'Unknown')}")
+            print(f"   📄 Has identity doc: {bool(response.get('identity_doc_url'))}")
+            print(f"   🏠 Has address proof: {bool(response.get('address_proof_url'))}")
+            print(f"   📊 Name match: {response.get('name_match', 'Unknown')}")
+        
+        return response
+
+    def test_admin_approve_verification(self):
+        """Test admin approving a carrier verification"""
+        if not self.verification_id:
+            print("   ⚠️ No verification ID available, skipping...")
+            return {}
+            
+        response = self.run_test(
+            "Admin Approve Verification", 
+            "PATCH",
+            f"admin/carrier-verifications/{self.verification_id}/approve",
+            200,
+            headers={'Authorization': f'Bearer {self.admin_token}'}
+        )
+        
+        print(f"   ✅ Approval response: {response.get('message', 'Unknown')}")
+        return response
+
+    def test_admin_reject_verification(self):
+        """Test admin rejecting a carrier verification"""
+        if not self.verification_id:
+            print("   ⚠️ No verification ID available, skipping...")
+            return {}
+            
+        rejection_reason = "Document quality is insufficient for verification"
+        
+        response = self.run_test(
+            "Admin Reject Verification",
+            "PATCH", 
+            f"admin/carrier-verifications/{self.verification_id}/reject?reason={rejection_reason}",
+            200,
+            headers={'Authorization': f'Bearer {self.admin_token}'}
+        )
+        
+        print(f"   ❌ Rejection response: {response.get('message', 'Unknown')}")
+        print(f"   📝 Reason: {response.get('reason', 'Unknown')}")
+        return response
+
+    def test_verification_status_after_admin_action(self):
+        """Test verification status after admin approval/rejection"""
+        response = self.run_test(
+            "Get Status After Admin Action",
             "GET",
-            "offers/mine", 
-            200
+            "carriers/verification/status",
+            200,
+            headers={'Authorization': f'Bearer {self.carrier_token}'}
         )
+        
+        print(f"   📊 Final status: {response.get('status', 'Unknown')}")
+        if response.get('status') == 'REJECTED':
+            print(f"   📝 Rejection reason: {response.get('rejection_reason', 'Unknown')}")
+        elif response.get('status') == 'VERIFIED':
+            print(f"   ✅ Verified at: {response.get('verified_at', 'Unknown')}")
+            
+        return response
 
-    def test_contracts(self):
-        """Test contracts endpoint"""
-        print("\n=== Testing Contracts ===")
+    def run_complete_workflow_test(self):
+        """Run the complete carrier verification workflow"""
+        print("\n🚀 Starting Complete Carrier Verification Workflow Test")
+        print("=" * 60)
         
-        self.run_test(
-            "Get my contracts",
-            "GET",
-            "contracts",
-            200
-        )
+        # Step 1: Login as carrier
+        if not self.login_carrier():
+            return False
+            
+        # Step 2: Check initial verification status
+        self.test_verification_status_initial()
+        
+        # Step 3: Submit verification information
+        self.test_submit_verification_info()
+        
+        # Step 4: Upload identity document
+        self.test_upload_identity_document()
+        
+        # Step 5: Try uploading invalid address proof (should fail)
+        self.test_upload_address_proof_invalid_date()
+        
+        # Step 6: Upload valid address proof
+        self.test_upload_address_proof()
+        
+        # Step 7: Check verification status after uploads
+        self.test_verification_status_complete()
+        
+        # Step 8: Login as admin
+        if not self.login_admin():
+            return False
+            
+        # Step 9: Admin list all verifications
+        self.test_admin_list_verifications()
+        
+        # Step 10: Admin get verification details
+        self.test_admin_get_verification_details()
+        
+        # Step 11: Test rejection flow first
+        self.test_admin_reject_verification()
+        
+        # Step 12: Check status after rejection
+        self.test_verification_status_after_admin_action()
+        
+        # Step 13: Re-submit for approval (since we rejected it)
+        if self.login_carrier():
+            self.test_submit_verification_info()  # Re-submit
+            self.test_upload_identity_document()  # Re-upload docs
+            self.test_upload_address_proof()
+            
+        # Step 14: Admin approve this time
+        if self.login_admin():
+            self.test_admin_list_verifications()  # Get updated ID
+            self.test_admin_approve_verification()
+            
+        # Step 15: Final status check
+        if self.login_carrier():
+            self.test_verification_status_after_admin_action()
+        
+        return True
 
-    def run_all_tests(self):
-        """Run all API tests"""
-        print("🚀 Starting LogiMatch API Tests for SHIPPER_CARRIER role\n")
+    def print_summary(self):
+        """Print test execution summary"""
+        print("\n" + "=" * 60)
+        print("🏁 TEST EXECUTION SUMMARY")
+        print("=" * 60)
+        print(f"📊 Tests Run: {self.tests_run}")
+        print(f"✅ Tests Passed: {self.tests_passed}")
+        print(f"❌ Tests Failed: {self.tests_run - self.tests_passed}")
+        print(f"📈 Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
         
-        # First try to login with existing account
-        if not self.test_login_combined_role():
-            # If login fails, try to register new account
-            if not self.test_combined_role_registration():
-                print("❌ Failed to authenticate - stopping tests")
-                return False
-        
-        # Test user profile
-        self.test_user_profile()
-        
-        # Test both shipper and carrier functionalities
-        self.test_create_request()
-        self.test_create_offer()
-        self.test_get_my_requests()
-        self.test_get_my_offers()
-        self.test_contracts()
-        
-        # Print summary
-        print(f"\n📊 Test Summary:")
-        print(f"Tests Run: {self.tests_run}")
-        print(f"Tests Passed: {self.tests_passed}")
-        print(f"Tests Failed: {self.tests_run - self.tests_passed}")
-        print(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
-        
-        return self.tests_passed == self.tests_run
-
-    def get_results(self):
-        """Get all test results"""
-        return {
-            "total_tests": self.tests_run,
-            "passed_tests": self.tests_passed,
-            "failed_tests": self.tests_run - self.tests_passed,
-            "success_rate": (self.tests_passed/self.tests_run*100) if self.tests_run > 0 else 0,
-            "results": self.results
-        }
+        if self.tests_passed == self.tests_run:
+            print("🎉 ALL TESTS PASSED! Carrier verification system is working correctly.")
+            return True
+        else:
+            print("⚠️ Some tests failed. Please check the API implementation.")
+            return False
 
 def main():
     """Main test execution"""
-    tester = LogimatchAPITester()
-    success = tester.run_all_tests()
-    
-    # Save results to file
-    with open('/app/backend_test_results.json', 'w') as f:
-        json.dump(tester.get_results(), f, indent=2)
-    
-    return 0 if success else 1
+    try:
+        tester = CarrierVerificationTester()
+        success = tester.run_complete_workflow_test()
+        result = tester.print_summary()
+        
+        return 0 if result else 1
+        
+    except KeyboardInterrupt:
+        print("\n\n⏹️ Tests interrupted by user")
+        return 1
+    except Exception as e:
+        print(f"\n❌ Unexpected error: {str(e)}")
+        return 1
 
 if __name__ == "__main__":
     sys.exit(main())
