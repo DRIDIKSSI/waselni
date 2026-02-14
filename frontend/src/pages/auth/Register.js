@@ -160,18 +160,20 @@ const Register = () => {
                         {t('auth.shipperDesc') || 'Je veux envoyer des colis'}
                       </div>
                     </div>
-                  </label>
+                  </div>
                 </div>
 
                 {/* Option Transporteur */}
                 <div
-                  className={`p-5 rounded-2xl border-2 transition-all duration-300 ${
+                  onClick={() => setIsCarrier(!isCarrier)}
+                  className={`p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
                     isCarrier
                       ? 'border-primary bg-primary/5 shadow-md'
                       : 'border-border hover:border-primary/50 hover:bg-secondary/30'
                   }`}
+                  data-testid="role-carrier-option"
                 >
-                  <label className="flex items-start gap-4 cursor-pointer">
+                  <div className="flex items-start gap-4">
                     <Checkbox
                       id="carrier-checkbox"
                       checked={isCarrier}
