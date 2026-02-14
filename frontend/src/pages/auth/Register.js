@@ -39,9 +39,8 @@ const Register = () => {
   // États pour les checkboxes de rôle
   const [isShipper, setIsShipper] = useState(false);
   const [isCarrier, setIsCarrier] = useState(false);
-  const [carrierType, setCarrierType] = useState('individual'); // 'individual' ou 'pro'
+  const [carrierType, setCarrierType] = useState('individual');
 
-  // Calculer le rôle final basé sur les sélections
   const computeRole = () => {
     if (isShipper && isCarrier) {
       return 'SHIPPER_CARRIER';
@@ -91,7 +90,6 @@ const Register = () => {
     }
   };
 
-  // Obtenir le résumé des rôles sélectionnés
   const getRoleSummary = () => {
     const roles = [];
     if (isShipper) roles.push(t('auth.shipper') || 'Expéditeur');
@@ -102,6 +100,9 @@ const Register = () => {
     }
     return roles.join(' et ');
   };
+
+  const toggleShipper = () => setIsShipper(prev => !prev);
+  const toggleCarrier = () => setIsCarrier(prev => !prev);
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-6 bg-gradient-to-b from-secondary/30 to-white" data-testid="register-page">
@@ -117,7 +118,6 @@ const Register = () => {
             {step === 1 ? (t('auth.selectRole') || 'Choisissez votre profil') : t('auth.registerSubtitle')}
           </CardDescription>
           
-          {/* Progress indicator */}
           <div className="flex items-center justify-center gap-2 pt-2">
             <div className={`w-3 h-3 rounded-full transition-colors ${step >= 1 ? 'bg-primary' : 'bg-muted'}`} />
             <div className={`w-12 h-1 rounded-full transition-colors ${step >= 2 ? 'bg-primary' : 'bg-muted'}`} />
@@ -130,25 +130,23 @@ const Register = () => {
               <div className="space-y-5">
                 {/* Option Expéditeur */}
                 <div
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setIsShipper(!isShipper);
-                  }}
-                  className={`p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
+                  role="button"
+                  tabIndex={0}
+                  onClick={toggleShipper}
+                  onKeyDown={(e) => e.key === 'Enter' && toggleShipper()}
+                  className={`p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer select-none ${
                     isShipper
                       ? 'border-primary bg-primary/5 shadow-md'
                       : 'border-border hover:border-primary/50 hover:bg-secondary/30'
                   }`}
                   data-testid="role-shipper-option"
                 >
-                  <div className="flex items-start gap-4">
-                    <Checkbox
-                      id="shipper-checkbox"
-                      checked={isShipper}
-                      onCheckedChange={() => {}}
-                      className="mt-1 h-5 w-5 pointer-events-none"
-                      data-testid="role-shipper-checkbox"
-                    />
+                  <div className="flex items-start gap-4 pointer-events-none">
+                    <div className={`w-5 h-5 mt-1 rounded border-2 flex items-center justify-center ${
+                      isShipper ? 'bg-primary border-primary' : 'border-muted-foreground'
+                    }`}>
+                      {isShipper && <CheckCircle2 className="w-3 h-3 text-white" />}
+                    </div>
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
                       isShipper ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
                     }`}>
@@ -157,7 +155,6 @@ const Register = () => {
                     <div className="flex-1">
                       <div className="font-semibold text-foreground flex items-center gap-2">
                         {t('auth.shipper') || 'Expéditeur'}
-                        {isShipper && <CheckCircle2 className="w-4 h-4 text-primary" />}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {t('auth.shipperDesc') || 'Je veux envoyer des colis'}
@@ -168,25 +165,23 @@ const Register = () => {
 
                 {/* Option Transporteur */}
                 <div
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setIsCarrier(!isCarrier);
-                  }}
-                  className={`p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
+                  role="button"
+                  tabIndex={0}
+                  onClick={toggleCarrier}
+                  onKeyDown={(e) => e.key === 'Enter' && toggleCarrier()}
+                  className={`p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer select-none ${
                     isCarrier
                       ? 'border-primary bg-primary/5 shadow-md'
                       : 'border-border hover:border-primary/50 hover:bg-secondary/30'
                   }`}
                   data-testid="role-carrier-option"
                 >
-                  <div className="flex items-start gap-4">
-                    <Checkbox
-                      id="carrier-checkbox"
-                      checked={isCarrier}
-                      onCheckedChange={() => {}}
-                      className="mt-1 h-5 w-5 pointer-events-none"
-                      data-testid="role-carrier-checkbox"
-                    />
+                  <div className="flex items-start gap-4 pointer-events-none">
+                    <div className={`w-5 h-5 mt-1 rounded border-2 flex items-center justify-center ${
+                      isCarrier ? 'bg-primary border-primary' : 'border-muted-foreground'
+                    }`}>
+                      {isCarrier && <CheckCircle2 className="w-3 h-3 text-white" />}
+                    </div>
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
                       isCarrier ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
                     }`}>
@@ -195,7 +190,6 @@ const Register = () => {
                     <div className="flex-1">
                       <div className="font-semibold text-foreground flex items-center gap-2">
                         {t('auth.carrier') || 'Transporteur'}
-                        {isCarrier && <CheckCircle2 className="w-4 h-4 text-primary" />}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {t('auth.carrierDesc') || 'Je veux transporter des colis'}
@@ -205,11 +199,11 @@ const Register = () => {
                   
                   {/* Options de type de transporteur */}
                   {isCarrier && (
-                    <div className="ml-16 mt-4 space-y-3 animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
+                    <div className="ml-9 mt-4 space-y-3 animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
                       <div className="text-sm font-medium text-muted-foreground mb-2">
                         {t('auth.carrierTypeQuestion') || 'Type de transporteur :'}
                       </div>
-                      <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-secondary/50">
+                      <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-secondary/50 pointer-events-auto">
                         <input
                           type="radio"
                           name="carrierType"
@@ -227,7 +221,7 @@ const Register = () => {
                           </div>
                         </div>
                       </label>
-                      <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-secondary/50">
+                      <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-secondary/50 pointer-events-auto">
                         <input
                           type="radio"
                           name="carrierType"
@@ -241,7 +235,7 @@ const Register = () => {
                         <div>
                           <div className="font-medium text-sm">{t('auth.carrierPro') || 'Professionnel'}</div>
                           <div className="text-xs text-muted-foreground">
-                            {t('auth.carrierProDesc') || 'Entreprise de transport (vérification requise)'}
+                            {t('auth.carrierProDesc') || 'Entreprise de transport'}
                           </div>
                         </div>
                       </label>
