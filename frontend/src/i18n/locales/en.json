@@ -152,7 +152,7 @@
     "carrierDesc": "I want to transport packages",
     "carrierPro": "Professional Carrier",
     "carrierProDesc": "I am a transport professional",
-    "shipperCarrier": "Shipper + Carrier",
+    "shipperCarrier": "Shipper and Carrier",
     "shipperCarrierDesc": "I want to send AND transport packages",
     "selectAtLeastOneRole": "Please select at least one profile",
     "carrierTypeQuestion": "Carrier type:",
