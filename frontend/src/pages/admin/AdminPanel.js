@@ -44,6 +44,7 @@ const AdminPanel = () => {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [verifications, setVerifications] = useState([]);
+  const [carrierVerifications, setCarrierVerifications] = useState([]);
   const [reports, setReports] = useState([]);
   const [requests, setRequests] = useState([]);
   const [offers, setOffers] = useState([]);
@@ -54,6 +55,8 @@ const AdminPanel = () => {
   const [adsSettings, setAdsSettings] = useState(null);
   const [newCountry, setNewCountry] = useState({ name: '', code: '', is_origin: true, is_destination: true });
   const [savingSettings, setSavingSettings] = useState(false);
+  const [selectedVerification, setSelectedVerification] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   useEffect(() => {
     if (!isAdmin) {
@@ -65,10 +68,11 @@ const AdminPanel = () => {
 
   const fetchData = async () => {
     try {
-      const [statsRes, usersRes, verificationsRes, reportsRes, requestsRes, offersRes, countriesRes, settingsRes, paymentsRes, analyticsRes, adsRes] = await Promise.all([
+      const [statsRes, usersRes, verificationsRes, carrierVerifRes, reportsRes, requestsRes, offersRes, countriesRes, settingsRes, paymentsRes, analyticsRes, adsRes] = await Promise.all([
         api.get('/admin/stats'),
         api.get('/admin/users'),
         api.get('/admin/verifications'),
+        api.get('/admin/carrier-verifications'),
         api.get('/admin/reports'),
         api.get('/admin/requests'),
         api.get('/admin/offers'),
@@ -82,6 +86,7 @@ const AdminPanel = () => {
       setStats(statsRes.data);
       setUsers(usersRes.data.items || []);
       setVerifications(verificationsRes.data.items || []);
+      setCarrierVerifications(carrierVerifRes.data.items || []);
       setReports(reportsRes.data.items || []);
       setRequests(requestsRes.data.items || []);
       setOffers(offersRes.data.items || []);
