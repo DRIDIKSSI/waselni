@@ -1111,6 +1111,15 @@ async def create_offer(data: OfferCreate, user: dict = Depends(get_current_user)
     if user["role"] not in ["CARRIER_INDIVIDUAL", "CARRIER_PRO", "SHIPPER_CARRIER", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Seuls les transporteurs peuvent créer des offres")
     
+    # Vérifier si le transporteur a une identité vérifiée (sauf admin)
+    if user["role"] != "ADMIN":
+        verification = await db.carrier_verifications.find_one({"user_id": user["id"]})
+        if not verification or verification.get("status") != "VERIFIED":
+            raise HTTPException(
+                status_code=403, 
+                detail="Vous devez faire vérifier votre identité avant de pouvoir déposer des offres. Rendez-vous dans votre profil pour soumettre vos documents."
+            )
+    
     offer_doc = {
         "id": str(uuid.uuid4()),
         "user_id": user["id"],
