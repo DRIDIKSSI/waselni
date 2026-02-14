@@ -56,6 +56,7 @@ class UserRole(str, Enum):
     SHIPPER = "SHIPPER"
     CARRIER_INDIVIDUAL = "CARRIER_INDIVIDUAL"
     CARRIER_PRO = "CARRIER_PRO"
+    SHIPPER_CARRIER = "SHIPPER_CARRIER"  # Expéditeur + Transporteur
     ADMIN = "ADMIN"
 
 class UserStatus(str, Enum):
