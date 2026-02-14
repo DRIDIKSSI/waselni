@@ -183,8 +183,8 @@ const Register = () => {
                     <Checkbox
                       id="carrier-checkbox"
                       checked={isCarrier}
-                      onCheckedChange={(checked) => setIsCarrier(checked)}
-                      className="mt-1 h-5 w-5"
+                      onCheckedChange={() => {}}
+                      className="mt-1 h-5 w-5 pointer-events-none"
                       data-testid="role-carrier-checkbox"
                     />
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
