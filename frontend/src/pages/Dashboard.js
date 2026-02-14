@@ -78,7 +78,7 @@ const Dashboard = () => {
       case 'SHIPPER': return t('auth.shipper');
       case 'CARRIER_INDIVIDUAL': return t('auth.carrier');
       case 'CARRIER_PRO': return t('auth.carrierPro');
-      case 'SHIPPER_CARRIER': return t('auth.shipperCarrier') || 'Expéditeur + Transporteur';
+      case 'SHIPPER_CARRIER': return t('auth.shipperCarrier') || 'Expéditeur et Transporteur';
       default: return '';
     }
   };
