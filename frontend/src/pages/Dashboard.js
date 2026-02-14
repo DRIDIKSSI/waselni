@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 
 const Dashboard = () => {
   const { t } = useTranslation();
-  const { user, api, isShipper, isCarrier, isCarrierPro } = useAuth();
+  const { user, api, isShipper, isCarrier, isCarrierPro, isShipperCarrier } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
