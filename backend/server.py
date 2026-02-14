@@ -133,8 +133,24 @@ class UserUpdate(BaseModel):
     bio: Optional[str] = None
 
 class ProVerificationCreate(BaseModel):
-    company_name: str
+    company_name: Optional[str] = None
     siret: Optional[str] = None
+
+class IdentityDocType(str, Enum):
+    PASSPORT = "PASSPORT"
+    RESIDENCE_PERMIT = "RESIDENCE_PERMIT"
+    DRIVING_LICENSE = "DRIVING_LICENSE"
+
+class CarrierVerificationCreate(BaseModel):
+    identity_doc_type: IdentityDocType
+    identity_first_name: str
+    identity_last_name: str
+    identity_birth_date: str
+    identity_doc_number: str
+    address_street: str
+    address_city: str
+    address_postal_code: str
+    address_country: str
 
 class RequestCreate(BaseModel):
     origin_country: str
