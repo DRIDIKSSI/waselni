@@ -167,33 +167,33 @@ const Dashboard = () => {
             <div>
               {verificationStatus.status === 'NOT_STARTED' && (
                 <>
-                  <strong>Vérifiez votre identité</strong>
-                  <p className="text-sm text-muted-foreground">
-                    Pour assurer la confiance des expéditeurs, veuillez vérifier votre identité.
+                  <strong className="text-orange-700">Vérifiez votre identité pour déposer des offres</strong>
+                  <p className="text-sm text-orange-600">
+                    Pour la sécurité de notre communauté, vous devez vérifier votre identité avant de pouvoir créer des offres de transport.
                   </p>
                 </>
               )}
               {verificationStatus.status === 'PENDING' && !verificationStatus.documents_complete && (
                 <>
-                  <strong>Documents manquants</strong>
-                  <p className="text-sm text-muted-foreground">
-                    Veuillez compléter votre dossier de vérification.
+                  <strong className="text-orange-700">Documents manquants - Dépôt d'offres bloqué</strong>
+                  <p className="text-sm text-orange-600">
+                    Veuillez compléter votre dossier de vérification pour pouvoir créer des offres.
                   </p>
                 </>
               )}
               {verificationStatus.status === 'PENDING' && verificationStatus.documents_complete && (
                 <>
-                  <strong>Vérification en cours</strong>
-                  <p className="text-sm text-muted-foreground">
-                    Votre dossier est en cours d'examen par notre équipe.
+                  <strong className="text-blue-700">Vérification en cours</strong>
+                  <p className="text-sm text-blue-600">
+                    Votre dossier est en cours d'examen. Vous pourrez créer des offres une fois votre identité validée.
                   </p>
                 </>
               )}
               {verificationStatus.status === 'REJECTED' && (
                 <>
-                  <strong>Vérification rejetée</strong>
-                  <p className="text-sm text-muted-foreground">
-                    {verificationStatus.rejection_reason || 'Veuillez corriger votre dossier.'}
+                  <strong className="text-red-700">Vérification refusée - Dépôt d'offres bloqué</strong>
+                  <p className="text-sm text-red-600">
+                    {verificationStatus.rejection_reason || 'Veuillez corriger votre dossier pour pouvoir créer des offres.'}
                   </p>
                 </>
               )}
