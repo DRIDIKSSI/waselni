@@ -632,7 +632,7 @@ async def upload_request_photo(request_id: str, file: UploadFile = File(...), us
 # ==================== OFFERS ROUTES ====================
 @api_router.post("/offers")
 async def create_offer(data: OfferCreate, user: dict = Depends(get_current_user)):
-    if user["role"] not in ["CARRIER_INDIVIDUAL", "CARRIER_PRO", "ADMIN"]:
+    if user["role"] not in ["CARRIER_INDIVIDUAL", "CARRIER_PRO", "SHIPPER_CARRIER", "ADMIN"]:
         raise HTTPException(status_code=403, detail="Seuls les transporteurs peuvent créer des offres")
     
     offer_doc = {
