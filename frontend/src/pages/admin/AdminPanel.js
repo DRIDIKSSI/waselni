@@ -122,6 +122,27 @@ const AdminPanel = () => {
     }
   };
 
+  const handleCarrierVerification = async (verificationId, approve = true) => {
+    try {
+      if (approve) {
+        await api.patch(`/admin/carrier-verifications/${verificationId}/approve`);
+        toast.success('Identité vérifiée avec succès');
+      } else {
+        if (!rejectReason.trim()) {
+          toast.error('Veuillez indiquer un motif de rejet');
+          return;
+        }
+        await api.patch(`/admin/carrier-verifications/${verificationId}/reject?reason=${encodeURIComponent(rejectReason)}`);
+        toast.success('Vérification rejetée');
+      }
+      setSelectedVerification(null);
+      setRejectReason('');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erreur');
+    }
+  };
+
   const handleCloseReport = async (reportId) => {
     try {
       await api.patch(`/admin/reports/${reportId}/close`);
