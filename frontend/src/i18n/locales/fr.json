@@ -631,5 +631,21 @@
     "hoursAgo_plural": "il y a {{count}} heures",
     "daysAgo": "il y a {{count}} jour",
     "daysAgo_plural": "il y a {{count}} jours"
+  },
+  "verification": {
+    "requiredTitle": "Vérification requise",
+    "requiredDesc": "Pour la sécurité de notre communauté, vous devez faire vérifier votre identité avant de pouvoir déposer des offres de transport.",
+    "pendingTitle": "Vérification en cours",
+    "pendingDesc": "Votre demande de vérification est en cours d'examen. Vous pourrez créer des offres une fois votre identité validée par notre équipe.",
+    "rejectedTitle": "Vérification refusée",
+    "rejectedDesc": "Votre demande de vérification a été refusée. Veuillez soumettre de nouveaux documents.",
+    "rejectionReason": "Motif du refus",
+    "whyTitle": "Pourquoi cette vérification ?",
+    "reason1": "Garantir la sécurité des expéditeurs et de leurs colis",
+    "reason2": "Établir une relation de confiance avec la communauté",
+    "reason3": "Obtenir un badge \"Vérifié\" sur votre profil",
+    "startVerification": "Commencer la vérification",
+    "resubmit": "Soumettre à nouveau",
+    "viewStatus": "Voir le statut"
   }
 }
