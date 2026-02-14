@@ -112,3 +112,33 @@ Transporteur → Soumet infos → Upload ID → Upload justificatif → Admin ex
 - 100% réussite backend (21/21 tests)
 - 100% réussite frontend
 - 100% réussite panel admin
+
+## Notifications Email Resend (Février 2026)
+
+### Configuration
+```env
+RESEND_API_KEY=re_xxxxx
+SENDER_EMAIL=contact@waselni.com
+ADMIN_EMAIL=admin@waselni.com
+```
+
+### Emails Implémentés
+1. **send_admin_verification_alert** - Notifie l'admin d'une nouvelle demande de vérification
+2. **send_verification_approved_email** - Notifie le transporteur de l'approbation
+3. **send_verification_rejected_email** - Notifie le transporteur du rejet avec motif
+
+### Templates
+- Emails HTML stylés avec le branding Waselni
+- Boutons d'action (lien vers admin/dashboard)
+- Responsive design
+
+## Mise à jour du Nom de Profil (Février 2026)
+- FR: "Expéditeur et Transporteur"
+- EN: "Shipper and Carrier"
+- AR: "مُرسل وناقل"
+
+## Système d'Évaluation (Existant)
+- API: POST /api/contracts/{id}/reviews
+- Rating: 1-5 étoiles
+- Commentaire obligatoire
+- Moyenne affichée sur le profil public
