@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Skeleton } from '../components/ui/skeleton';
+import { Alert, AlertDescription } from '../components/ui/alert';
 import {
   Package,
   Truck,
@@ -16,7 +17,8 @@ import {
   PlusCircle,
   CheckCircle2,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Shield
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -25,6 +27,7 @@ const Dashboard = () => {
   const { user, api, isShipper, isCarrier, isCarrierPro, isShipperCarrier } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [verificationStatus, setVerificationStatus] = useState(null);
   const [stats, setStats] = useState({
     requests: [],
     offers: [],
