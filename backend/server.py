@@ -664,6 +664,12 @@ async def submit_carrier_verification(data: CarrierVerificationCreate, user: dic
     if existing and existing.get("status") == "VERIFIED":
         raise HTTPException(status_code=400, detail="Identité déjà vérifiée")
     
+    doc_type_labels = {
+        "PASSPORT": "Passeport",
+        "RESIDENCE_PERMIT": "Titre de séjour",
+        "DRIVING_LICENSE": "Permis de conduire"
+    }
+    
     verification = {
         "id": str(uuid.uuid4()),
         "user_id": user["id"],
@@ -695,6 +701,11 @@ async def submit_carrier_verification(data: CarrierVerificationCreate, user: dic
         verification["id"] = existing["id"]
     else:
         await db.carrier_verifications.insert_one(verification)
+    
+    # Envoyer notification à l'admin
+    user_name = f"{data.identity_first_name} {data.identity_last_name}"
+    doc_type_label = doc_type_labels.get(data.identity_doc_type.value, data.identity_doc_type.value)
+    asyncio.create_task(send_admin_verification_alert(user_name, user.get("email", ""), doc_type_label))
     
     return serialize_doc(verification)
 
