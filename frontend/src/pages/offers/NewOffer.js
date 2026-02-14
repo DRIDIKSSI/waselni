@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/button';
@@ -7,6 +7,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '../../components/ui/alert';
 import {
   Select,
   SelectContent,
@@ -16,7 +17,7 @@ import {
 } from '../../components/ui/select';
 import { Calendar } from '../../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
-import { Truck, Loader2, CalendarIcon, Plane, ArrowLeft } from 'lucide-react';
+import { Truck, Loader2, CalendarIcon, Plane, ArrowLeft, ShieldAlert, ShieldCheck, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr, enUS, ar } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -28,6 +29,8 @@ const NewOffer = () => {
   const navigate = useNavigate();
   const { api, isCarrier } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState(null);
+  const [checkingVerification, setCheckingVerification] = useState(true);
   const [countries, setCountries] = useState([]);
   const [formData, setFormData] = useState({
     origin_country: '',
@@ -52,7 +55,20 @@ const NewOffer = () => {
 
   useEffect(() => {
     fetchCountries();
+    checkVerificationStatus();
   }, []);
+
+  const checkVerificationStatus = async () => {
+    try {
+      const res = await api.get('/carriers/verification/status');
+      setVerificationStatus(res.data);
+    } catch (error) {
+      console.error('Failed to check verification status:', error);
+      setVerificationStatus({ status: 'NOT_STARTED', is_verified: false });
+    } finally {
+      setCheckingVerification(false);
+    }
+  };
 
   const fetchCountries = async () => {
     try {
@@ -61,7 +77,6 @@ const NewOffer = () => {
       setCountries(res.data || []);
     } catch (error) {
       console.error('Failed to fetch countries:', error);
-      // Fallback to default countries
       setCountries([
         { id: '1', name: 'France', code: 'FR', is_origin: true, is_destination: true },
         { id: '2', name: 'Tunisie', code: 'TN', is_origin: true, is_destination: true }
