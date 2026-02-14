@@ -39,6 +39,9 @@ import MatchingOfferRequests from "./pages/matching/MatchingOfferRequests";
 // Admin
 import AdminPanel from "./pages/admin/AdminPanel";
 
+// Carrier
+import IdentityVerification from "./pages/carrier/IdentityVerification";
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
