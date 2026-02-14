@@ -195,11 +195,11 @@ const Register = () => {
                         {t('auth.carrierDesc') || 'Je veux transporter des colis'}
                       </div>
                     </div>
-                  </label>
+                  </div>
                   
                   {/* Options de type de transporteur */}
                   {isCarrier && (
-                    <div className="ml-16 mt-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
+                    <div className="ml-16 mt-4 space-y-3 animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
                       <div className="text-sm font-medium text-muted-foreground mb-2">
                         {t('auth.carrierTypeQuestion') || 'Type de transporteur :'}
                       </div>
