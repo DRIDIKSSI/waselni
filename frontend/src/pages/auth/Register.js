@@ -130,13 +130,15 @@ const Register = () => {
               <div className="space-y-5">
                 {/* Option Expéditeur */}
                 <div
-                  className={`p-5 rounded-2xl border-2 transition-all duration-300 ${
+                  onClick={() => setIsShipper(!isShipper)}
+                  className={`p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
                     isShipper
                       ? 'border-primary bg-primary/5 shadow-md'
                       : 'border-border hover:border-primary/50 hover:bg-secondary/30'
                   }`}
+                  data-testid="role-shipper-option"
                 >
-                  <label className="flex items-start gap-4 cursor-pointer">
+                  <div className="flex items-start gap-4">
                     <Checkbox
                       id="shipper-checkbox"
                       checked={isShipper}
