@@ -151,6 +151,13 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
+      {/* Carrier Routes */}
+      <Route path="/carrier/verification" element={
+        <ProtectedRoute>
+          <IdentityVerification />
+        </ProtectedRoute>
+      } />
+      
       {/* Admin Routes */}
       <Route path="/admin" element={
         <AdminRoute>
