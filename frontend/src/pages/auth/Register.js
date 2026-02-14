@@ -130,7 +130,10 @@ const Register = () => {
               <div className="space-y-5">
                 {/* Option Expéditeur */}
                 <div
-                  onClick={() => setIsShipper(!isShipper)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsShipper(!isShipper);
+                  }}
                   className={`p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
                     isShipper
                       ? 'border-primary bg-primary/5 shadow-md'
@@ -142,8 +145,8 @@ const Register = () => {
                     <Checkbox
                       id="shipper-checkbox"
                       checked={isShipper}
-                      onCheckedChange={(checked) => setIsShipper(checked)}
-                      className="mt-1 h-5 w-5"
+                      onCheckedChange={() => {}}
+                      className="mt-1 h-5 w-5 pointer-events-none"
                       data-testid="role-shipper-checkbox"
                     />
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
@@ -165,7 +168,10 @@ const Register = () => {
 
                 {/* Option Transporteur */}
                 <div
-                  onClick={() => setIsCarrier(!isCarrier)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsCarrier(!isCarrier);
+                  }}
                   className={`p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
                     isCarrier
                       ? 'border-primary bg-primary/5 shadow-md'
