@@ -152,7 +152,7 @@
     "carrierDesc": "Je veux transporter des colis",
     "carrierPro": "Transporteur Pro",
     "carrierProDesc": "Je suis un professionnel du transport",
-    "shipperCarrier": "Expéditeur + Transporteur",
+    "shipperCarrier": "Expéditeur et Transporteur",
     "shipperCarrierDesc": "Je veux envoyer ET transporter des colis",
     "selectAtLeastOneRole": "Veuillez sélectionner au moins un profil",
     "carrierTypeQuestion": "Type de transporteur :",
