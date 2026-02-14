@@ -1,0 +1,153 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "Mediterranean Precision",
+      "description": "A fusion of Swiss logistics precision and Mediterranean warmth. Trustworthy, efficient, yet human and accessible.",
+      "emotional_tone": "Reliable, Connected, Warm, Efficient",
+      "theme_mode": "light"
+    },
+    "typography": {
+      "font_family": {
+        "headings": "Manrope, sans-serif",
+        "body": "Inter, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "scale": {
+        "h1": "text-5xl md:text-6xl font-bold tracking-tight leading-none",
+        "h2": "text-4xl md:text-5xl font-bold tracking-tight",
+        "h3": "text-2xl md:text-3xl font-semibold tracking-tight",
+        "body_lg": "text-lg leading-relaxed",
+        "body_base": "text-base leading-relaxed",
+        "caption": "text-sm text-muted-foreground uppercase tracking-wider"
+      },
+      "rules": [
+        "Headings must use Manrope.",
+        "Body text must use Inter.",
+        "Use tight tracking for headings (-0.02em).",
+        "Use relaxed leading for body text (1.6)."
+      ]
+    },
+    "colors": {
+      "palette": {
+        "primary": {
+          "DEFAULT": "#005A9C",
+          "foreground": "#FFFFFF",
+          "description": "Deep Azure - Represents the Mediterranean sea and trust."
+        },
+        "secondary": {
+          "DEFAULT": "#F5F1E8",
+          "foreground": "#1A1A1A",
+          "description": "Warm Sand - Represents the Tunisian landscape and warmth."
+        },
+        "accent": {
+          "DEFAULT": "#E65100",
+          "foreground": "#FFFFFF",
+          "description": "Terracotta - Represents urgency, action, and rooftops."
+        },
+        "background": "#FFFFFF",
+        "foreground": "#0F172A",
+        "muted": "#F1F5F9",
+        "border": "#E2E8F0"
+      },
+      "gradients": {
+        "hero": "bg-gradient-to-br from-[#005A9C] to-[#003366]",
+        "subtle": "bg-gradient-to-b from-[#F5F1E8] to-white"
+      },
+      "usage": [
+        "Use Primary (Deep Azure) for main actions, headers, and branding.",
+        "Use Secondary (Warm Sand) for section backgrounds to break up white space.",
+        "Use Accent (Terracotta) sparingly for high-priority CTAs (e.g., 'Book Now').",
+        "NEVER use gradients for text.",
+        "Ensure text contrast ratios meet WCAG AA."
+      ]
+    },
+    "layout": {
+      "spacing": {
+        "container_padding": "px-6 md:px-12 lg:px-24",
+        "section_spacing": "py-16 md:py-24",
+        "element_spacing": "space-y-6 or gap-6"
+      },
+      "grids": {
+        "marketing": "grid grid-cols-1 md:grid-cols-12 gap-8 (Tetris Grid)",
+        "dashboard": "grid grid-cols-1 md:grid-cols-4 gap-6 (High Density)",
+        "cards": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+      },
+      "border_radius": {
+        "default": "rounded-xl",
+        "card": "rounded-2xl",
+        "button": "rounded-full"
+      }
+    },
+    "components": {
+      "buttons": {
+        "primary": "bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300",
+        "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-full px-6 py-4 font-medium",
+        "outline": "border-2 border-primary text-primary hover:bg-primary/5 rounded-full px-6 py-4 font-medium"
+      },
+      "cards": {
+        "style": "bg-white border border-border/50 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl p-6",
+        "feature": "bg-secondary/30 border-none hover:bg-secondary/50 transition-colors p-8 rounded-3xl"
+      },
+      "inputs": {
+        "style": "h-12 rounded-lg border-border focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-white/50 backdrop-blur-sm"
+      },
+      "navigation": {
+        "style": "glassmorphism sticky top-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-xl"
+      }
+    },
+    "visual_enhancers": {
+      "shadows": {
+        "soft": "shadow-[0_8px_30px_rgb(0,0,0,0.04)]",
+        "hover": "shadow-[0_8px_30px_rgb(0,0,0,0.08)]"
+      },
+      "glassmorphism": "bg-white/70 backdrop-blur-xl border border-white/20",
+      "textures": "Use subtle grain or noise overlays on solid color backgrounds to add depth."
+    },
+    "motion": {
+      "transitions": "transition-all duration-300 ease-out",
+      "hover_effects": "hover:-translate-y-1 hover:shadow-lg",
+      "loading": "Use skeleton loaders with a shimmer effect."
+    },
+    "assets": {
+      "images": [
+        {
+          "category": "hero_france",
+          "url": "https://images.unsplash.com/photo-1471874708433-acd480424946?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODF8MHwxfHNlYXJjaHwzfHxwYXJpcyUyMHNreWxpbmUlMjBlaWZmZWwlMjB0b3dlcnxlbnwwfHx8fDE3NzAyMDMyOTV8MA&ixlib=rb-4.1.0&q=85",
+          "description": "Eiffel Tower beside Seine - Represents France endpoint."
+        },
+        {
+          "category": "hero_tunisia",
+          "url": "https://images.unsplash.com/photo-1726428977576-808d18a05988?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHx0dW5pc2lhJTIwc2lkaSUyMGJvdSUyMHNhaWQlMjBhcmNoaXRlY3R1cmV8ZW58MHx8fHwxNzcwMjAzMjkwfDA&ixlib=rb-4.1.0&q=85",
+          "description": "Sidi Bou Said Blue Door - Represents Tunisia endpoint."
+        },
+        {
+          "category": "logistics_sea",
+          "url": "https://images.unsplash.com/photo-1766940978581-a056078f6645?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDB8MHwxfHNlYXJjaHwzfHxjYXJnbyUyMHNoaXAlMjBtZWRpdGVycmFuZWFuJTIwc2VhfGVufDB8fHx8MTc3MDIwMzI4M3ww&ixlib=rb-4.1.0&q=85",
+          "description": "Cargo ship on blue ocean - Represents shipping."
+        },
+        {
+          "category": "courier_service",
+          "url": "https://images.unsplash.com/photo-1646920912229-bc0d5d94e68b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzN8MHwxfHNlYXJjaHwxfHxkZWxpdmVyeSUyMGNvdXJpZXIlMjBwYWNrYWdlJTIwaGFwcHklMjBjdXN0b21lcnxlbnwwfHx8fDE3NzAyMDMyODZ8MA&ixlib=rb-4.1.0&q=85",
+          "description": "Courier with package - Represents service."
+        }
+      ],
+      "icons": "Use Lucide React icons. For specialized logistics icons, use Phosphor Icons if needed."
+    },
+    "accessibility": {
+      "rules": [
+        "Ensure all text has a contrast ratio of at least 4.5:1.",
+        "Interactive elements must have a focus ring.",
+        "Use semantic HTML (main, section, article, nav).",
+        "All images must have alt text."
+      ]
+    },
+    "universal_guidelines": [
+      "Do not use generic centered layouts. Use asymmetry.",
+      "Use 2-3x more spacing than typical designs.",
+      "Every interaction needs a micro-animation.",
+      "Use 'sonner' for toasts.",
+      "Components must use named exports.",
+      "Pages must use default exports."
+    ]
+  }
+}
