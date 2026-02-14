@@ -91,15 +91,32 @@ const Dashboard = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const quickActions = isShipper ? [
-    { label: t('requests.new'), icon: PlusCircle, href: '/requests/new', primary: true },
-    { label: t('dashboard.myRequests'), icon: Package, href: '/requests/mine' },
-    { label: t('requests.findCarrier'), icon: Truck, href: '/offers' }
-  ] : [
-    { label: t('offers.new'), icon: PlusCircle, href: '/offers/new', primary: true },
-    { label: t('dashboard.myOffers'), icon: Truck, href: '/offers/mine' },
-    { label: t('nav.browseRequests'), icon: Package, href: '/requests' }
-  ];
+  // Actions rapides selon le rôle
+  const getQuickActions = () => {
+    if (isShipperCarrier) {
+      // Double rôle: toutes les actions
+      return [
+        { label: t('requests.new'), icon: PlusCircle, href: '/requests/new', primary: true },
+        { label: t('offers.new'), icon: Truck, href: '/offers/new', primary: true },
+        { label: t('dashboard.myRequests'), icon: Package, href: '/requests/mine' },
+        { label: t('dashboard.myOffers'), icon: Truck, href: '/offers/mine' }
+      ];
+    } else if (isShipper) {
+      return [
+        { label: t('requests.new'), icon: PlusCircle, href: '/requests/new', primary: true },
+        { label: t('dashboard.myRequests'), icon: Package, href: '/requests/mine' },
+        { label: t('requests.findCarrier'), icon: Truck, href: '/offers' }
+      ];
+    } else {
+      return [
+        { label: t('offers.new'), icon: PlusCircle, href: '/offers/new', primary: true },
+        { label: t('dashboard.myOffers'), icon: Truck, href: '/offers/mine' },
+        { label: t('nav.browseRequests'), icon: Package, href: '/requests' }
+      ];
+    }
+  };
+
+  const quickActions = getQuickActions();
 
   if (loading) {
     return (
