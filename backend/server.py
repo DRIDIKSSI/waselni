@@ -107,7 +107,7 @@ class ReportStatus(str, Enum):
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    role: Literal["SHIPPER", "CARRIER_INDIVIDUAL", "CARRIER_PRO"]
+    role: Literal["SHIPPER", "CARRIER_INDIVIDUAL", "CARRIER_PRO", "SHIPPER_CARRIER"]
     first_name: str
     last_name: str
     phone: str
