@@ -41,12 +41,20 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [requestsRes, offersRes, contractsRes, conversationsRes] = await Promise.all([
+      const promises = [
         api.get('/requests/mine?limit=5'),
         api.get('/offers/mine?limit=5'),
         api.get('/contracts'),
         api.get('/conversations')
-      ]);
+      ];
+      
+      // Vérifier le statut de vérification pour les transporteurs
+      if (isCarrier) {
+        promises.push(api.get('/carriers/verification/status'));
+      }
+      
+      const results = await Promise.all(promises);
+      const [requestsRes, offersRes, contractsRes, conversationsRes] = results;
 
       setStats({
         requests: requestsRes.data.items || [],
@@ -54,6 +62,10 @@ const Dashboard = () => {
         contracts: contractsRes.data || [],
         conversations: conversationsRes.data || []
       });
+      
+      if (isCarrier && results[4]) {
+        setVerificationStatus(results[4].data);
+      }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
