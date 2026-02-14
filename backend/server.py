@@ -963,6 +963,12 @@ async def admin_reject_carrier_verification(
         }}
     )
     
+    # Récupérer les infos de l'utilisateur pour l'email
+    carrier = await db.users.find_one({"id": verification["user_id"]}, {"_id": 0})
+    if carrier:
+        user_name = f"{carrier.get('first_name', '')} {carrier.get('last_name', '')}"
+        asyncio.create_task(send_verification_rejected_email(carrier.get("email", ""), user_name, reason))
+    
     # Log d'audit
     await db.audit_logs.insert_one({
         "id": str(uuid.uuid4()),
@@ -976,6 +982,12 @@ async def admin_reject_carrier_verification(
     })
     
     return {"message": "Vérification rejetée", "status": "REJECTED", "reason": reason}
+
+# ==================== REQUESTS ROUTES ====================
+@api_router.post("/requests")
+async def create_request(data: RequestCreate, user: dict = Depends(get_current_user)):
+    if user["role"] not in ["SHIPPER", "SHIPPER_CARRIER", "ADMIN"]:
+        raise HTTPException(status_code=403, detail="Seuls les expéditeurs peuvent créer des demandes")
     
     request_doc = {
         "id": str(uuid.uuid4()),
