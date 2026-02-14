@@ -920,6 +920,12 @@ async def admin_approve_carrier_verification(verification_id: str, user: dict = 
         {"$set": {"identity_verified": True, "identity_verified_at": now_utc()}}
     )
     
+    # Récupérer les infos de l'utilisateur pour l'email
+    carrier = await db.users.find_one({"id": verification["user_id"]}, {"_id": 0})
+    if carrier:
+        user_name = f"{carrier.get('first_name', '')} {carrier.get('last_name', '')}"
+        asyncio.create_task(send_verification_approved_email(carrier.get("email", ""), user_name))
+    
     # Log d'audit
     await db.audit_logs.insert_one({
         "id": str(uuid.uuid4()),
