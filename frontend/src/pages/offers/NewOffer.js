@@ -135,6 +135,133 @@ const NewOffer = () => {
     );
   }
 
+  // Afficher un loader pendant la vérification du statut
+  if (checkingVerification) {
+    return (
+      <div className="max-w-2xl mx-auto px-6 py-12 text-center">
+        <Loader2 className="w-16 h-16 mx-auto mb-4 text-primary animate-spin" />
+        <p className="text-muted-foreground">{t('common.loading')}</p>
+      </div>
+    );
+  }
+
+  // Bloquer l'accès si l'identité n'est pas vérifiée
+  if (!verificationStatus?.is_verified) {
+    const isPending = verificationStatus?.status === 'PENDING';
+    const isRejected = verificationStatus?.status === 'REJECTED';
+    const notStarted = verificationStatus?.status === 'NOT_STARTED';
+
+    return (
+      <div className="max-w-2xl mx-auto px-6 py-12" data-testid="verification-required">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          {t('common.back')}
+        </Button>
+
+        <Card className="rounded-3xl shadow-lg border-0">
+          <CardContent className="pt-8 pb-8">
+            <div className="text-center mb-6">
+              {isPending ? (
+                <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-10 h-10 text-amber-600" />
+                </div>
+              ) : isRejected ? (
+                <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                  <ShieldAlert className="w-10 h-10 text-red-600" />
+                </div>
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
+                  <ShieldAlert className="w-10 h-10 text-blue-600" />
+                </div>
+              )}
+
+              <h2 className="text-2xl font-bold mb-2">
+                {isPending 
+                  ? (t('verification.pendingTitle') || 'Vérification en cours')
+                  : isRejected
+                    ? (t('verification.rejectedTitle') || 'Vérification refusée')
+                    : (t('verification.requiredTitle') || 'Vérification requise')
+                }
+              </h2>
+              
+              <p className="text-muted-foreground max-w-md mx-auto">
+                {isPending 
+                  ? (t('verification.pendingDesc') || 'Votre demande de vérification est en cours d\'examen. Vous pourrez créer des offres une fois votre identité validée par notre équipe.')
+                  : isRejected
+                    ? (t('verification.rejectedDesc') || 'Votre demande de vérification a été refusée. Veuillez soumettre de nouveaux documents.')
+                    : (t('verification.requiredDesc') || 'Pour la sécurité de notre communauté, vous devez faire vérifier votre identité avant de pouvoir déposer des offres de transport.')
+                }
+              </p>
+
+              {isRejected && verificationStatus?.rejection_reason && (
+                <Alert variant="destructive" className="mt-4 text-left">
+                  <ShieldAlert className="h-4 w-4" />
+                  <AlertTitle>{t('verification.rejectionReason') || 'Motif du refus'}</AlertTitle>
+                  <AlertDescription>
+                    {verificationStatus.rejection_reason}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+
+            <div className="bg-secondary/50 rounded-2xl p-6 mb-6">
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-primary" />
+                {t('verification.whyTitle') || 'Pourquoi cette vérification ?'}
+              </h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">•</span>
+                  {t('verification.reason1') || 'Garantir la sécurité des expéditeurs et de leurs colis'}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">•</span>
+                  {t('verification.reason2') || 'Établir une relation de confiance avec la communauté'}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">•</span>
+                  {t('verification.reason3') || 'Obtenir un badge "Vérifié" sur votre profil'}
+                </li>
+              </ul>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              {(notStarted || isRejected) && (
+                <Button 
+                  className="flex-1 rounded-full h-12"
+                  onClick={() => navigate('/carrier/verification')}
+                  data-testid="start-verification-btn"
+                >
+                  <ShieldCheck className="w-4 h-4 mr-2" />
+                  {isRejected 
+                    ? (t('verification.resubmit') || 'Soumettre à nouveau')
+                    : (t('verification.startVerification') || 'Commencer la vérification')
+                  }
+                </Button>
+              )}
+              {isPending && (
+                <Button 
+                  variant="outline"
+                  className="flex-1 rounded-full h-12"
+                  onClick={() => navigate('/carrier/verification')}
+                >
+                  {t('verification.viewStatus') || 'Voir le statut'}
+                </Button>
+              )}
+              <Button 
+                variant="outline" 
+                className="flex-1 rounded-full h-12"
+                onClick={() => navigate('/requests')}
+              >
+                {t('nav.browseRequests') || 'Parcourir les demandes'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-6 py-12" data-testid="new-offer-page">
       <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
