@@ -6,7 +6,7 @@ import asyncio
 from datetime import datetime
 
 class LogimatchAPITester:
-    def __init__(self, base_url="https://exec-loader.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://waselni-preview.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.tokens = {}  # Store tokens for different users
         self.users = {}   # Store user data
