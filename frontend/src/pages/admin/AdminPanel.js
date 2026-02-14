@@ -363,6 +363,142 @@ const AdminPanel = () => {
           </Card>
         </TabsContent>
 
+        {/* Identity Verification Tab */}
+        <TabsContent value="identity">
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5" />
+                Vérifications d'identité ({carrierVerifications.length})
+              </CardTitle>
+              <CardDescription>
+                Vérification des pièces d'identité et justificatifs de domicile des transporteurs
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {carrierVerifications.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">Aucune vérification en attente</p>
+              ) : (
+                <div className="space-y-4">
+                  {carrierVerifications.map((v) => (
+                    <div key={v.id} className={`p-4 rounded-xl border ${
+                      v.status === 'VERIFIED' ? 'bg-green-50 border-green-200' :
+                      v.status === 'REJECTED' ? 'bg-red-50 border-red-200' :
+                      'bg-muted/50 border-transparent'
+                    }`}>
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">
+                              {v.user?.first_name} {v.user?.last_name}
+                            </span>
+                            <Badge variant={v.status === 'VERIFIED' ? 'default' : v.status === 'REJECTED' ? 'destructive' : 'secondary'}>
+                              {v.status === 'VERIFIED' ? 'Vérifié' : v.status === 'REJECTED' ? 'Rejeté' : 'En attente'}
+                            </Badge>
+                            {v.name_match === false && (
+                              <Badge variant="destructive" className="text-xs">
+                                ⚠️ Noms différents
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-sm text-muted-foreground space-y-1">
+                            <p>📧 {v.user?.email} • 📞 {v.user?.phone}</p>
+                            <p>
+                              🪪 <strong>{v.identity_doc_type === 'PASSPORT' ? 'Passeport' : v.identity_doc_type === 'RESIDENCE_PERMIT' ? 'Titre de séjour' : 'Permis'}</strong>
+                              {' '} - {v.identity_first_name} {v.identity_last_name} - N°{v.identity_doc_number}
+                            </p>
+                            <p>
+                              📍 {v.address_street}, {v.address_postal_code} {v.address_city}, {v.address_country}
+                            </p>
+                            {v.address_proof_date && (
+                              <p>
+                                📄 Justificatif du {new Date(v.address_proof_date).toLocaleDateString('fr-FR')}
+                                {v.address_proof_valid === false && (
+                                  <Badge variant="destructive" className="ml-2 text-xs">
+                                    ⚠️ {'>'} 3 mois
+                                  </Badge>
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {v.identity_doc_url && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open(process.env.REACT_APP_BACKEND_URL + v.identity_doc_url, '_blank')}
+                            >
+                              <Eye className="w-4 h-4 mr-1" /> Pièce ID
+                            </Button>
+                          )}
+                          {v.address_proof_url && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open(process.env.REACT_APP_BACKEND_URL + v.address_proof_url, '_blank')}
+                            >
+                              <Eye className="w-4 h-4 mr-1" /> Domicile
+                            </Button>
+                          )}
+                          {v.status === 'PENDING' && (
+                            <>
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={() => handleCarrierVerification(v.id, true)}
+                                disabled={!v.identity_doc_url || !v.address_proof_url}
+                              >
+                                <CheckCircle2 className="w-4 h-4 mr-1" /> Approuver
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => setSelectedVerification(v)}
+                              >
+                                <XCircle className="w-4 h-4 mr-1" /> Rejeter
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Modal de rejet */}
+                      {selectedVerification?.id === v.id && (
+                        <div className="mt-4 p-4 bg-white rounded-lg border space-y-3">
+                          <Label>Motif du rejet *</Label>
+                          <Textarea
+                            value={rejectReason}
+                            onChange={(e) => setRejectReason(e.target.value)}
+                            placeholder="Ex: Photo de la pièce d'identité illisible, justificatif de domicile trop ancien..."
+                            className="min-h-[80px]"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => { setSelectedVerification(null); setRejectReason(''); }}
+                            >
+                              Annuler
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleCarrierVerification(v.id, false)}
+                            >
+                              Confirmer le rejet
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Verifications Tab */}
         <TabsContent value="verifications">
           <Card className="rounded-2xl">
